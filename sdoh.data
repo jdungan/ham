@@ -1,0 +1,31 @@
+sdoh = {
+
+  location: {
+    zipcode: {
+      economy: 33,
+      education: 33,
+      community: 33,
+      healthcare: 66,
+      neighborhood: 88,
+    },
+
+
+    county: {
+      economy: 33,
+      education: 33,
+      community: 33,
+      healthcare: 66,
+      neighborhood: 88,
+    },
+
+
+    state: {
+      economy: 33,
+      education: 33,
+      community: 33,
+      healthcare: 66,
+      neighborhood: 88,
+    }
+  }
+
+}
