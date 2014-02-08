@@ -88,8 +88,6 @@ var circles =[
       var interval = maxR/circles.length
       
       var radius = 100;
-
-      var g = svg.append('g')
       
       var color =  d3.scale.category10();
       
@@ -105,42 +103,48 @@ var circles =[
             // //get angle from g center to mouse         
             var mouse_angle = Math.atan2(150-d3.event.y, 150-d3.event.x);
             
-            var el = d3.select(this),
-            elx = el.attr('cx'),
-            ely = el.attr('cy');
-            var element_angle = Math.atan2(150-ely, 150-elx);
+            // var el = d3.select(this),
+            // elx = el.attr('cx'),
+            // ely = el.attr('cy');
+            // var element_angle = Math.atan2(150-ely, 150-elx);
 
-            circle_drag.rotation = circle_drag.rotation + (mouse_angle - element_angle)
+            circle_drag.rotation = circle_drag.rotation - mouse_angle;
             
-            g.attr('transform','translate(150,150) rotate('+arc2deg(circle_drag.rotation)+')')
+            arcs.attr('transform','translate(150,150) rotate('+arc2deg(circle_drag.rotation)+')')
             
           };
       
-
-
-
       var rotate = d3.behavior.drag()
           // .origin( function (d) {
           //   return {x:150,y:150}; 
           // })
           .on("drag", circle_drag);
       
-      g.selectAll('circles')
+      var arc = d3.svg.arc()
+        .outerRadius(100)
+        .innerRadius(80)
+        .startAngle(function(d,i){
+            return i*interval;
+        })
+        .endAngle(function(d,i){
+            return (i+1)*interval;
+        });
+      
+      var arcs = svg.selectAll('g.arcs')
         .data(circles)
         .enter() 
-        .append('circle')
+        .append('g')
+          .attr('class','arcs')
+        
+      arcs.append("svg:path")
         .attr({
-          cy:function(d,i){return radius*Math.sin(i*interval);},
-          cx:function(d,i){return radius*Math.cos(i*interval);},
-          r:20,
+          d:arc,
           fill:function(d,i){return color(i);}
         })
         .call(rotate)
     
     
-    g.attr('transform','translate(150,150)');
-
-    // g.attr({x:150,y:150})
+    arcs.attr('transform','translate(150,150)');
 
 
     });
