@@ -83,46 +83,42 @@ var circles =[
         //   })
         //   .call(drag)
 
-      var maxR = Math.PI*2
+      var twoPI = Math.PI*2
           
-      var interval = maxR/circles.length
+      var interval = twoPI/circles.length
       
       var radius = 100;
       
       var color =  d3.scale.category10();
       
       var arc2deg = function (x) {
-        return Math.round((x > 0 ? x : (maxR + x)) * 360 / maxR)
+        return Math.round((x > 0 ? x : (twoPI + x)) * 360 / twoPI)
       }
       
       
       var circle_drag =  function(d) {
         
+        // save rotation in radians
         circle_drag.rotation= circle_drag.rotation || 0;
 
-            // //get angle from g center to mouse         
-            var mouse_angle = Math.atan2(150-d3.event.y, 150-d3.event.x);
+        // //get angle from g center to mouse         
+                
+        var start_angle = Math.atan2(d3.event.y-d3.event.dy, d3.event.x-d3.event.dx);
+        var end_angle = Math.atan2(d3.event.y, d3.event.x);
+        var angle_diff = end_angle-start_angle
+        
+        circle_drag.rotation += angle_diff;
+        
+        arcs.attr('transform','translate(150,150) rotate('+arc2deg(circle_drag.rotation)+')')
             
-            // var el = d3.select(this),
-            // elx = el.attr('cx'),
-            // ely = el.attr('cy');
-            // var element_angle = Math.atan2(150-ely, 150-elx);
-
-            circle_drag.rotation = circle_drag.rotation - mouse_angle;
-            
-            arcs.attr('transform','translate(150,150) rotate('+arc2deg(circle_drag.rotation)+')')
-            
-          };
+      };
       
       var rotate = d3.behavior.drag()
-          // .origin( function (d) {
-          //   return {x:150,y:150}; 
-          // })
           .on("drag", circle_drag);
       
       var arc = d3.svg.arc()
         .outerRadius(100)
-        .innerRadius(80)
+        .innerRadius(60)
         .startAngle(function(d,i){
             return i*interval;
         })
