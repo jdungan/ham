@@ -26,14 +26,13 @@ var sliders=[
 
 
 var circles =[  
-{label:'A'},
-{label:'B'},
-
-  {label:'A'},
-  {label:'B'},
-  {label:'C'},
-  {label:'D'},
-  {label:'E'}
+  {label:'Howdy',score:50},
+  {label:'Dammit',score:55},
+  {label:'Gigem',score:52},
+  {label:'Aggies',score:70},
+  {label:'Rock',score:150},
+  {label:'Rockelle',score:530},
+  {label:'Good Bull',score:84}
 ]
 
     
@@ -134,10 +133,22 @@ var circles =[
         
       arcs.append("svg:path")
         .attr({
+          id: function (d,i){
+            return 'path'+i
+          },
           d:arc,
           fill:function(d,i){return color(i);}
         })
         .call(rotate)
+        
+    arcs.append('text')
+      .append("textPath")
+        .attr("xlink:href", function (d,i) {
+          return '#path'+i
+        })
+        .text(function (d) {
+          return d.label
+        })
     
     
     arcs.attr('transform','translate(150,150)');
