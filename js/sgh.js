@@ -88,7 +88,8 @@
         .data(circles)
         .enter() 
         .append('g')
-          .attr('class','arcs')
+          .attr('class','arcs dont_select')
+          
         
       arcs.append("svg:path")
         .attr({
@@ -99,6 +100,7 @@
         
         
     arcs.append('text')
+      .attr('class','dont_select')
       .append("textPath")
         .attr("xlink:href", function (d,i) {return '#path'+i})
         .text(function (d) {return d.label})
