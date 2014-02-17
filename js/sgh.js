@@ -16,7 +16,7 @@
       var svg = d3.select('#canvas')
         .append('svg')
           .attr('width',window.innerWidth)
-          .attr('height',window.innerHeight/2)
+          .attr('height',window.innerHeight)
 
 
       var twoPI = Math.PI*2
@@ -33,8 +33,8 @@
 
 
       var shift = {
-        x:200,
-        y:200,
+        x:window.innerWidth/2,
+        y:window.innerHeight/2,
         text: function (){
         return this.x+','+this.y
       },}
