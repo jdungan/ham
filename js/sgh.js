@@ -44,11 +44,11 @@ $("#data_switch").on("pagecreate", function() {
 
   var wheel_options = {
     translate: {
-      x: window.innerWidth / 2,
-      y: window.innerHeight
+      x: window.innerWidth /2 ,
+      y: window.innerHeight* .75
     },
     scale: {
-      x: 4,
+      x: 3,
       y: 2
     },
     rotate: 0
