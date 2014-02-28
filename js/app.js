@@ -18,21 +18,11 @@ var circles = [{
   score: 60
 }
 ]
-// 
-// ,{
-//   icon:"home",
-//   label: 'Dammit',
-//   score: 55
-// }, ]
-
 var icons =['home','group','dollar','check']
-
 
 $("#data_switch").on("pagecreate", function() {
 
   // circles = sdoh.category
-
-  // FastClick.attach(document.body);
 
   var svg = d3.select('#canvas')
     .append('svg')
@@ -47,42 +37,9 @@ $("#data_switch").on("pagecreate", function() {
   var color = d3.scale.category10();
 
   var arc2deg = function(x) {
-    return x != 0 ? 180 * (x / Math.PI) : 0
+    return 180 * (x / Math.PI)
   }
 
-
-  var transformation = function(options) {
-    this.options = options;
-    this.text = function() {
-      options = this.options;
-      return 'translate(' + options.translate.x + ',' + options.translate.y + ') scale(' + options.scale.x + ',' + options.scale.y + ') rotate(' + options.rotate + ')'
-    }
-  }
-
-  var wheel_options = {
-    translate: {
-      x: window.innerWidth /2 ,
-      y: window.innerHeight* .7
-    },
-    scale: {
-      x: 3,
-      y: 1.5
-    },
-    rotate: -arc2deg(interval/2)
-  }
-
-
-  var score_options = {
-    translate: {
-      x: window.innerWidth / 2,
-      y: window.innerHeight / 4
-    },
-    scale: {
-      x: 5,
-      y: 5
-    },
-    rotate: 0
-  }
 
   var scores = d3.scale.quantize()
     .domain([0,100])
@@ -99,19 +56,28 @@ $("#data_switch").on("pagecreate", function() {
     .text(scores(circles[0].score))
 
 
-  var score_trans = new transformation(score_options)
+  var score_transform = new transform()
+  score_transform.translate({
+      x: window.innerWidth / 2,
+      y: window.innerHeight / 4
+    })
+    score_transform.scale({
+      x: 5,
+      y: 5
+    })
 
+  score.attr('transform',score_transform.toString());
 
-  score.attr('transform',score_trans.text())
-
-  var wheel_trans = new transformation(wheel_options)
-
+  var wheel_transform = new transform();
+  wheel_transform.translate({x:(window.innerWidth / 2), y:(window.innerHeight * .7)});
+  wheel_transform.scale({x:3, y:1.5});
+  wheel_transform.rotate(-arc2deg(interval / 2));
 
   var circle_drag = function(d) {
 
     //shift for translate
-    d3.event.x -= wheel_options.translate.x
-    d3.event.y -= wheel_options.translate.y
+    d3.event.x -= wheel_transform.translate().x;
+    d3.event.y -= wheel_transform.translate().y;
 
 
     // //get angle from g center to mouse         
@@ -121,22 +87,18 @@ $("#data_switch").on("pagecreate", function() {
     var radian_diff = end_angle - start_angle;
     var degree_diff = Math.round(arc2deg(radian_diff))
 
-
-    // if (degree_diff != 0) {
           
-      var new_rotate =  wheel_options.rotate + degree_diff;
-        
-      wheel_options.rotate = new_rotate%360 + ( new_rotate >= 0 ? 0 : 360 )
+    var new_rotate =  wheel_transform.rotate() + degree_diff;
       
-      
-      wheel.attr('transform', wheel_trans.text())
-  
-  
-      var category = wheel_position(wheel_options.rotate)
-      d3.select('#score').select('text') .text(scores(category.score))
-      
-      
-    // }
+    wheel_transform.rotate(new_rotate%360 + ( new_rotate >= 0 ? 0 : 360 ));
+    
+    
+    wheel.attr('transform', wheel_transform.toString())
+
+
+    var category = wheel_position(wheel_transform.rotate())
+    
+    d3.select('#score').select('text') .text(scores(category.score))
 
   };
 
@@ -149,14 +111,11 @@ $("#data_switch").on("pagecreate", function() {
     .attr('id', 'wheel')
     .call(rotate)
 
+
     var button = wheel.append('circle')
     .attr('fill','blue')
     .attr('r',15)
-    // d3.behavior.click()
-    .on('click',function (d) {
-      // alert('howdy')
-    })
-
+ 
 
   var arc = d3.svg.arc()
     .outerRadius(100)
@@ -186,35 +145,57 @@ $("#data_switch").on("pagecreate", function() {
       }
     })
 
+  var icon_transform = new transform();
+  
    arcs.append('svg:path')
       .attr('d',function (d,i) {
         var path=d3.select('path#'+d.icon).attr('d')
         return path;
+      })
+      .attr('id',function (d,i) {
+        return 'icon'+i
       })
       .attr("transform", function(d,i) {
         var angle =interval*i+(interval/2),
         r=80,
         x= r*Math.sin(angle),
         y= r*Math.cos(angle);
-         
-        return "translate("+x+","+(-y)+") rotate("+arc2deg(angle)+")"; 
+        icon_transform.translate({x:(x-(this.getBBox().width/2)),y: -y})
+        icon_transform.rotate(arc2deg(angle));
+
+        return icon_transform.toString(); 
       })
 
     
+      var downArrow_transform = new transform();
+      downArrow_transform.translate().x =(wheel_transform.translate().x-73)
+      downArrow_transform.translate().y =(wheel_transform.translate().y-150)
+      downArrow_transform.scale({x:5,y:5});
+      
 
-  arcs.append('text')
-    .attr('class', 'label dont_select')
-    .append("textPath")
-    .attr("xlink:href", function(d, i) {
-      return '#path' + i
-    })
-  
-  .text(function(d) {
-    return d.label
-   // return d[Object.keys(d)[0]].icon
-  })
+      svg.append('g')
+      .append('svg:path')
+      .attr('d',function (d,i) {
+        return d3.select('path#down_arrow').attr('d')
+      })
+      .attr({'fill-opacity':0,'stroke-opacity':1,stroke:'black'})
+      .attr('transform',downArrow_transform.toString())
 
-  wheel.attr('transform', wheel_trans.text());
+
+
+  // arcs.append('text')
+  //   .attr('class', 'label dont_select')
+  //   .append("textPath")
+  //   .attr("xlink:href", function(d, i) {
+  //     return '#path' + i
+  //   })
+  // 
+  // .text(function(d) {
+  //   return d.label
+  //  // return d[Object.keys(d)[0]].icon
+  // })
+
+  wheel.attr('transform', wheel_transform.toString());
 
 
 });
