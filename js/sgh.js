@@ -79,6 +79,11 @@ var sgh = new(function api() {
   
 })()
 
+//handy helper
+var arc2deg = function(x) {
+  return 180 * (x / Math.PI)
+}
+
 
 //tranform function to be added to svg objects
 var transform = function() {
@@ -150,24 +155,21 @@ var transform = function() {
 
 // d3 based wheel control
 
-
-
   function Wheel(parent) {
-    var inner_element = this.element || "";
-    var inner_data = this.data || [];
-    var options = options || {};
-    var inner_wheel= parent.append('g');
+    var inner_element = this.element || "",
+     inner_data = this.data || [],
+     options = options || {},
+     inner_wheel= parent.append('g'),
+     radius = 100,
+     colors = d3.scale.category10();
+     
+     var icon_type=['home','group','dollar','check'];
+         
+    inner_wheel.category = d3.scale.quantize()
+      .domain([360,0])
 
-    var interval = 2 * Math.PI / circles.length
-
-    var radius = 100;
-
-    var colors = d3.scale.category10();
-
-    var arc2deg = function(x) {
-      return 180 * (x / Math.PI)
-    }
-
+      inner_wheel.interval = Math.PI/2;
+    
     var rotate_wheel = function(d) {
 
       //shift for translate
@@ -199,23 +201,25 @@ var transform = function() {
       .attr('id', 'wheel')
       .call(rotate)
 
-
-
     inner_wheel.transform = new transform();
 
     inner_wheel.update = function(new_data) {
 
       if (new_data) {
         this.data = new_data
-
+        
+        inner_wheel.interval = 2 * Math.PI / new_data.length,
+        
+        inner_wheel.category.range(new_data);
+        
         var arc = d3.svg.arc()
           .outerRadius(100)
           .innerRadius(50)
           .startAngle(function(d, i) {
-            return i * interval;
+            return i * inner_wheel.interval;
           })
           .endAngle(function(d, i) {
-            return (i + 1) * interval;
+            return (i + 1) * inner_wheel.interval;
           });
 
 
@@ -225,7 +229,7 @@ var transform = function() {
           .append('g')
           .attr('class', 'arcs dont_select')
 
-        .append("svg:path")
+        arcs.append("svg:path")
           .attr({
             id: function(d, i) {
               return 'path' + i
@@ -235,6 +239,27 @@ var transform = function() {
               return colors(i);
             }
           })
+          
+        arcs.append('svg:path')
+        .attr('d',function (d,i) {
+          var path=d3.select('path#'+icon_type[i]).attr('d')
+          return path;
+        })
+        .attr('id',function (d,i) {
+          return 'icon'+i
+        })
+        .attr("transform", function(d,i) {
+          var angle =inner_wheel.interval*i+(inner_wheel.interval/2),
+          r=80,
+          x= r*Math.sin(angle),
+          y= r*Math.cos(angle);
+          var icon_transform = new transform();
+          
+          icon_transform.translate({x:(x),y: -y})
+          icon_transform.rotate(arc2deg(angle));
+          return icon_transform.toString(); 
+        })
+          
 
         inner_wheel.attr('transform', inner_wheel.transform.toString());
       }
