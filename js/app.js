@@ -19,26 +19,6 @@ var circles = [{
 }
 ]
 
-var circle2 = [{
-  label: 'Gigem',
-  icon:"home",
-  score: 99
-}, {
-  icon:"home",
-  label: 'Aggies',
-  score: 80
-}, {
-  icon:"home",
-  label: '1984',
-  score: 70
-},{
-  label: 'Howdy',
-  icon:"home",
-  score: 60
-}
-]
-
-
 
 $("#data_switch").on("pagecreate", function() {
   
@@ -62,14 +42,9 @@ $("#data_switch").on("pagecreate", function() {
   .domain([360,0])
   .range(circles)
 
-
-
-
   var scores = d3.scale.quantize()
     .domain([0,100])
     .range(['F','F','F','F','F','D','C','B','A']);
-
-
   
  
   var score = svg.append('g')
@@ -102,11 +77,15 @@ $("#data_switch").on("pagecreate", function() {
     y: 2
   });
   
+  //nudge the rotation to position the middle of the first arc at the top
   wheel.transform.rotate(-arc2deg(interval / 2));
 
+  //listen for any rotation and set the score
   $(wheel.node()).on('rotate',function (event,degrees) {
       var category = wheel_position(wheel.transform.rotate())        
       d3.select('#score').select('text') .text(scores(category.score))
+      
+      
   
   })
 
@@ -171,15 +150,20 @@ $("#data_switch").on("pagecreate", function() {
   //  // return d[Object.keys(d)[0]].icon
   // })
 
+  // wait for the api to be ready (which means waiting for position)
+  sgh.ready.done(function () {
+    circles = sgh.sample()
+      .done(function (data) {
+                
+        wheel.update(data.Category);
 
-  // circles = sgh.sample()
-  //   .done(function (data) {
-  //     wheel.data(data);
-  //   })
-  //   .error(function (d) {
-  //     debugger;
-  //   });
-
-  wheel.update(circles)
+      })
+      .error(function (d) {
+        debugger;
+      });
+  });
 
 });
+
+
+

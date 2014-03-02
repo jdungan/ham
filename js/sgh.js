@@ -1,37 +1,82 @@
 "use strict";
 
 
-// http://206.214.166.144/api/score/-95.9911,36.1498/?format=json
+// location watch object
+function Location() {
+  var options = {enableHighAccuracy: true},
+  inner_pos={},
+  dfd = new $.Deferred(),
+  moved = function(pos) {
+    inner_pos = pos || {};
+    dfd.resolve()
+  },
+  fail = function (err) {
+      if (err){
+          console.warn('ERROR(' + err.code + '): ' + err.message);
+      }
+      dfd.reject()
+  };
 
+  this.__defineGetter__("lat", function(){
+    return inner_pos.coords ? inner_pos.coords.latitude : null;
+  });
+
+  this.__defineGetter__("lng", function(){
+      
+      return inner_pos.coords ? inner_pos.coords.longitude: null ;
+  });
+
+  this.WatchID =navigator.geolocation.watchPosition(moved, fail, options);
+
+  this.ready = dfd.promise()
+}
+
+
+// http://206.214.166.144/api/score/-95.9911,36.1498?callback=your_function
+
+// creates a new sgh api object in the global space
 var sgh = new(function api() {
+  var dfd = new $.Deferred()
+  
+  
+  this.loc = new Location;
+  
+  this.loc.__defineGetter__("position", function(){
+      return this.lng+','+this.lat;
+  });
+  
+  this.loc.ready.done(function () {
+    return dfd.resolve()
+  })
 
-  var call_map = [{
-    'name': 'sample',
-    'uri': 'api/score/-95.9911,36.1498'
-  }]
+  this.ready = dfd.promise()
+  
+  var api_calls = [
+  { 'name': 'sample',
+    'uri': 'api/score/'}
+  ]
 
   this.options = this.options || {
     url: 'http://206.214.166.144/'
   };
 
-
-  this.call_api = function(resource, ajax_params) {
+  this.call_api = function(uri, ajax_params) {
     ajax_params = ajax_params || {};
     return $.ajax({
       type: "get",
-      url: this.options.url + resource,
+      url: this.options.url + uri + this.loc.position,
       data: ajax_params,
       dataType: 'jsonp',
     })
   };
+  
   // setup simple api mappings
-  call_map.every(function(v, i) {
+  api_calls.every(function(v, i) {
     api.prototype[v.name] = function(params) {
       return this.call_api(v.uri, params)
     }
   });
-
-
+  
 })()
 
 
