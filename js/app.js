@@ -37,7 +37,8 @@ var circle2 = [{
   score: 60
 }
 ]
-// var icons =['home','group','dollar','check']
+
+
 
 $("#data_switch").on("pagecreate", function() {
   
@@ -57,14 +58,18 @@ $("#data_switch").on("pagecreate", function() {
     return 180 * (x / Math.PI)
   }
 
+  var wheel_position = d3.scale.quantize()
+  .domain([360,0])
+  .range(circles)
+
+
+
 
   var scores = d3.scale.quantize()
     .domain([0,100])
     .range(['F','F','F','F','F','D','C','B','A']);
-  
-  var wheel_position = d3.scale.quantize()
-  .domain([360,0])
-  .range(circles)
+
+
   
  
   var score = svg.append('g')
@@ -72,97 +77,45 @@ $("#data_switch").on("pagecreate", function() {
     .append('text')
     .text(scores(circles[0].score))
   
+    score.transform = new transform()
+    score.transform.translate({
+        x: window.innerWidth / 2,
+        y: window.innerHeight / 4
+      })
+    score.transform.scale({
+        x: 5,
+        y: 5
+    })
+    
+    score.attr('transform',score.transform.toString());
+
+
     var wheel = new Wheel(svg);
 
-    wheel.update(circles)
-
-  // var score_transform = new transform()
-  // score_transform.translate({
-  //     x: window.innerWidth / 2,
-  //     y: window.innerHeight / 4
-  //   })
-  //   score_transform.scale({
-  //     x: 5,
-  //     y: 5
-  //   })
-  // 
-  // score.attr('transform',score_transform.toString());
-  // 
-  wheel.transform.translate({x:(window.innerWidth / 2), y:(window.innerHeight * .7)});
-  wheel.transform.scale({x:2, y:2});
+  wheel.transform.translate({
+    x: (window.innerWidth / 2),
+    y: (window.innerHeight * .7)
+  });
+  
+  wheel.transform.scale({
+    x: 2,
+    y: 2
+  });
+  
   wheel.transform.rotate(-arc2deg(interval / 2));
-  // 
-  // var circle_drag = function(d) {
-  // 
-  //   //shift for translate
-  //   d3.event.x -= wheel_transform.translate().x;
-  //   d3.event.y -= wheel_transform.translate().y;
-  // 
-  // 
-  //   // //get angle from g center to mouse         
-  // 
-  //   var start_angle = Math.atan2(d3.event.y - d3.event.dy, d3.event.x - d3.event.dx);
-  //   var end_angle = Math.atan2(d3.event.y, d3.event.x);
-  //   var radian_diff = end_angle - start_angle;
-  //   var degree_diff = Math.round(arc2deg(radian_diff))
-  // 
-  //         
-  //   var new_rotate =  wheel_transform.rotate() + degree_diff;
-  //     
-  //   wheel_transform.rotate(new_rotate%360 + ( new_rotate >= 0 ? 0 : 360 ));
-  //   
-  //   
-  //   wheel.attr('transform', wheel_transform.toString())
-  // 
-  // 
-  //   var category = wheel_position(wheel_transform.rotate())
-  //   
-  //   d3.select('#score').select('text') .text(scores(category.score))
-  // 
-  // };
-  // 
-  // var rotate = d3.behavior.drag()
-  //   .on("drag", circle_drag);
-  // 
-  // 
-  // 
-  // var wheel = svg.append('g')
-  //   .attr('id', 'wheel')
-  //   .call(rotate)
-  // 
-  // 
+
+  $(wheel.node()).on('rotate',function (event,degrees) {
+      var category = wheel_position(wheel.transform.rotate())        
+      d3.select('#score').select('text') .text(scores(category.score))
+  
+  })
+
+
   //   var button = wheel.append('circle')
   //   .attr('fill','blue')
   //   .attr('r',15)
   //  
   // 
-  // var arc = d3.svg.arc()
-  //   .outerRadius(100)
-  //   .innerRadius(50)
-  //   .startAngle(function(d, i) {
-  //     return i * interval;
-  //   })
-  //   .endAngle(function(d, i) {
-  //     return (i + 1) * interval;
-  //   });
-  // 
-  // var arcs = wheel.selectAll('g.arcs')
-  //   .data(circles)
-  //   .enter()
-  //   .append('g')
-  //   .attr('class', 'arcs dont_select')
-  // 
-  // 
-  // arcs.append("svg:path")
-  //   .attr({
-  //     id: function(d, i) {
-  //       return 'path' + i
-  //     },
-  //     d: arc,
-  //     fill: function(d, i) {
-  //       return color(i);
-  //     }
-  //   })
   // 
   // var icon_transform = new transform();
   // 
@@ -218,7 +171,6 @@ $("#data_switch").on("pagecreate", function() {
   //  // return d[Object.keys(d)[0]].icon
   // })
 
-  wheel.attr('transform', wheel.transform.toString());
 
   // circles = sgh.sample()
   //   .done(function (data) {
@@ -228,5 +180,6 @@ $("#data_switch").on("pagecreate", function() {
   //     debugger;
   //   });
 
+  wheel.update(circles)
 
 });
