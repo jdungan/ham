@@ -7,17 +7,6 @@ $("#dialer").on("pagecreate", function() {
     .attr('width', window.innerWidth)
     .attr('height', window.innerHeight)
 
-
-  // var interval = 2 * Math.PI / circles.length
-  // 
-  // var radius = 100;
-  // 
-  // var color = d3.scale.category10();
-  // 
-  // var arc2deg = function(x) {
-  //   return 180 * (x / Math.PI)
-  // }
-
   var scores = d3.scale.quantize()
     .domain([0, 100])
     .range(['F', 'F', 'F', 'F', 'F', 'D', 'C', 'B', 'A']);
@@ -40,7 +29,8 @@ $("#dialer").on("pagecreate", function() {
 
   score.attr('transform', score.transform.toString());
 
-
+   
+   
   var wheel = new Wheel(svg);
 
   wheel.transform.translate({
@@ -56,6 +46,8 @@ $("#dialer").on("pagecreate", function() {
   //nudge the rotation to position the middle of the first arc at the top
   wheel.transform.rotate(-arc2deg(wheel.interval / 2));
 
+
+
   //listen for any rotation and set the score
   $(wheel.node()).on('rotate', function(event, degrees) {
     this.current_category = this.current_category || {}
@@ -69,10 +61,14 @@ $("#dialer").on("pagecreate", function() {
 
     }
 
-
-
   })
 
+  var button = wheel.append('circle')
+    .attr('fill', 'blue')
+    .attr('r', 15)
+    .on('click', function(d) {
+      debugger;
+    })
 
   // wait for the api to be ready (which means waiting for position)
   sgh.ready.done(function() {

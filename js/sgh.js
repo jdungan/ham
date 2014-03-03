@@ -240,23 +240,21 @@ var transform = function() {
             }
           })
           
-        arcs.append('svg:path')
-        .attr('d',function (d,i) {
-          var path=d3.select('path#'+icon_type[i]).attr('d')
-          return path;
+        arcs.append('svg:use')
+        .attr('xlink:href',function (d,i) {
+          return '#'+icon_type[i]
         })
         .attr('id',function (d,i) {
           return 'icon'+i
         })
         .attr("transform", function(d,i) {
           var angle =inner_wheel.interval*i+(inner_wheel.interval/2),
-          r=80,
+          r=90,
           x= r*Math.sin(angle),
           y= r*Math.cos(angle);
           var icon_transform = new transform();
-          
           icon_transform.translate({x:(x),y: -y})
-          icon_transform.rotate(arc2deg(angle));
+          // icon_transform.rotate(arc2deg(angle));
           return icon_transform.toString(); 
         })
           
