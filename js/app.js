@@ -11,13 +11,12 @@ $("#dialer").on("pagecreate", function() {
     .domain([0, 100])
     .range(['F', 'F', 'F', 'F', 'F', 'D', 'C', 'B', 'A']);
 
-
   var score = svg.append('g')
     .attr('id', 'score')
     .append('text')
     // .text(scores(circles[0].score))
 
-  score.transform = new transform()
+  score.transform = new transform(score)
   score.transform.translate({
     x: window.innerWidth / 2,
     y: window.innerHeight / 4
@@ -27,32 +26,27 @@ $("#dialer").on("pagecreate", function() {
     y: 5
   })
 
-  score.attr('transform', score.transform.toString());
-
+  score.transform.render
+  
    
-   
-  var wheel = new Wheel(svg);
+  svg.wheel = new Wheel();
 
-  wheel.transform.translate({
+  svg.wheel().transform.translate({
     x: (window.innerWidth / 2),
     y: (window.innerHeight * .7)
   });
 
-  wheel.transform.scale({
+  svg.wheel().transform.scale({
     x: 2,
     y: 2
   });
 
-  //nudge the rotation to position the middle of the first arc at the top
-  wheel.transform.rotate(-arc2deg(wheel.interval / 2));
-
-
 
   //listen for any rotation and set the score
-  $(wheel.node()).on('rotate', function(event, degrees) {
+  $(svg.wheel().node()).on('rotate', function(event, degrees) {
     this.current_category = this.current_category || {}
 
-    var category = wheel.category(wheel.transform.rotate())
+    var category = svg.wheel().category(svg.wheel().transform.rotate())
 
     if (this.current_category != category) {
       this.current_category = category;
@@ -63,19 +57,22 @@ $("#dialer").on("pagecreate", function() {
 
   })
 
-  var button = wheel.append('circle')
-    .attr('fill', 'blue')
-    .attr('r', 15)
-    .on('click', function(d) {
-      debugger;
-    })
+  // var button = wheel.append('circle')
+  //   .attr('fill', 'blue')
+  //   .attr('r', 15)
+  //   .on('click', function(d) {
+  //     debugger;
+  //   })
 
   // wait for the api to be ready (which means waiting for position)
   sgh.ready.done(function() {
     sgh.sample()
       .done(function(data) {
 
-        wheel.update(data.Category);
+        svg.wheel().data(data.Category);
+        //nudge the rotation to position the middle of the first arc at the top
+        svg.wheel().transform.rotate(-arc2deg(svg.wheel().interval / 2));
+        svg.wheel().transform.render
 
       })
       .error(function(d) {
