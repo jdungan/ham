@@ -15,32 +15,32 @@ $("#dialer").on("pagecreate", function() {
     .attr('id', 'score')
     .append('text')
     // .text(scores(circles[0].score))
-
+    .text('A')
+    
+    
   score.transform = new transform(score)
-  score.transform.translate({
-    x: window.innerWidth / 2,
-    y: window.innerHeight / 4
-  })
-  score.transform.scale({
-    x: 5,
-    y: 5
-  })
-
-  score.transform.render
-  
+  score
+    .transform.translate({
+      x: window.innerWidth / 2,
+      y: window.innerHeight / 3
+    })
+    .scale({
+      x: 4,
+      y: 4
+    })
+    .render()
    
   svg.wheel = new Wheel();
 
-  svg.wheel().transform.translate({
-    x: (window.innerWidth / 2),
-    y: (window.innerHeight * .7)
-  });
-
-  svg.wheel().transform.scale({
-    x: 2,
-    y: 2
-  });
-
+  svg.wheel().transform
+    .translate({
+      x: (window.innerWidth / 2),
+      y: (window.innerHeight * .5)
+    })
+    .scale({
+      x: 2,
+      y: 2
+    })
 
   //listen for any rotation and set the score
   $(svg.wheel().node()).on('rotate', function(event, degrees) {
@@ -68,11 +68,12 @@ $("#dialer").on("pagecreate", function() {
   sgh.ready.done(function() {
     sgh.sample()
       .done(function(data) {
-
         svg.wheel().data(data.Category);
         //nudge the rotation to position the middle of the first arc at the top
-        svg.wheel().transform.rotate(-arc2deg(svg.wheel().interval / 2));
-        svg.wheel().transform.render
+        svg.wheel()
+          .transform
+            .rotate(-arc2deg(svg.wheel().interval / 2))
+            .render()
 
       })
       .error(function(d) {

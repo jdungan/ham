@@ -88,71 +88,59 @@ var arc2deg = function(x) {
 
 
 //tranform function to be added to svg objects
-var transform = function(element) {
+function transform(element) {
   var order = ['translate', 'scale', 'rotate']
-  var inner ={
-    translate:{x:0,y:0},
-    scale:{x:1,y:1},
-    rotate:0
-  }
 
-  element = element || {};
-  
-  this.rotate = function(d) {
-    if (d)(inner.rotate = d)
-    return inner.rotate;
+  function xcy() {
+    return this.value.x + ',' + this.value.y
   };
 
-  this.rotate.string = function() {
-    return inner.rotate;
-  }
-
-  this.translate = function(d) {
-    if (d) {
-      if (d.x) {
-        inner.translate.x = d.x
-      }
-      if (d.y) {
-        inner.translate.y = d.y
+  var inner = {
+    translate: {
+      value: {
+        x: 0,
+        y: 0
+      },
+      string: xcy
+    },
+    scale: {
+      value: {
+        x: 1,
+        y: 1
+      },
+      string: xcy
+    },
+    rotate: {
+      value: 0,
+      string: function() {
+        return this.value
       }
     }
-    return inner.translate;
   };
 
-  this.translate.string = function() {
-    return inner.translate.x + ',' + inner.translate.y
-  }
 
-  this.scale = function(d) {
-    if (d) {
-      if (d.x) {
-        inner.scale.x = d.x
-      }
-      if (d.y) {
-        inner.scale.y = d.y
-      }
+  order.forEach(function(v) {
+
+    this[v] = function (d) {
+      if (d){
+        inner[v].value = d;
+      }  
+      return d ? this : inner[v].value
     }
-    return inner.scale;
-  };
+    
+  }, this);
 
-  this.scale.string = function() {
-    return inner.scale.x + ',' + inner.scale.y
+  this.render = function () {
+    element.attr('transform',this.toString());
   }
 
   this.toString = function() {
     return order.map(
       function(v) {
-        return v + '(' + this[v].string() + ')'
+        return v + '(' + inner[v].string() + ')'
       },
       this).join(' ');
   }
-
-  this.__defineGetter__("render", function() {
-    if (element){
-      element.attr('transform',this.toString());
-    } 
-  });
-  
 
 }
 
@@ -166,15 +154,19 @@ var transform = function(element) {
 
     var category = d3.scale.quantize().domain([360, 0])
 
-    var rotate_wheel = function(d) {
+    function drag_icon(e){
+      d3.event.sourceEvent.stopPropagation();
+      console.log('icon drag')
       
-      
+    }
+
+    function rotate_wheel (d) {
       var wheel = inner.wheel;
       var transform = inner.wheel.transform;
-
+      console.log(d3.event.sourceEvent)
       //shift for translate
-      eventX = d3.event.x - transform.translate().x;
-      eventY = d3.event.y - transform.translate().y;
+      var eventX = d3.event.x - transform.translate().x;
+      var eventY = d3.event.y - transform.translate().y;
 
       // //get angle from g center to mouse         
       var start_angle = Math.atan2(eventY - d3.event.dy, eventX - d3.event.dx);
@@ -214,6 +206,7 @@ var transform = function(element) {
           .enter()
           .append('g')
           .attr('class', 'arcs dont_select')
+          
 
         arcs.append("svg:path")
           .attr({
@@ -225,27 +218,32 @@ var transform = function(element) {
               return options.colors(i);
             }
           })
+          
 
-        arcs.append('svg:use')
-          .attr('xlink:href', function(d, i) {
-            return '#' + options.icon_types[i]
-          })
-          .attr('id', function(d, i) {
-            return 'icon' + i
-          })
-          .attr("transform", function(d, i) {
-            var angle = interval * i + (interval / 2),
-              r = 90,
-              x = r * Math.sin(angle),
-              y = r * Math.cos(angle);
-            var icon_transform = new transform();
-            icon_transform.translate({
-              x: (x),
-              y: -y
+        arcs
+          .append('svg:use')
+            .attr('xlink:href', function(d, i) {
+              return '#' + options.icon_types[i]
             })
-            icon_transform.rotate(arc2deg(angle));
-            return icon_transform.toString();
-          })
+            .attr('id', function(d, i) {
+              return 'icon' + i
+            })
+            .attr("transform", function(d, i) {
+              var angle = interval * i + (interval / 2),
+                r = 90,
+                x = r * Math.sin(angle),
+                y = r * Math.cos(angle);
+              var icon_transform = new transform();
+              icon_transform.translate({
+                x: x,
+                y: -y
+              })
+              icon_transform.rotate(arc2deg(angle));
+              return icon_transform.toString();
+            })
+            .call(
+                d3.behavior.drag().on("drag", drag_icon)
+            )
 
         this.transform.render;
         
@@ -253,18 +251,22 @@ var transform = function(element) {
       return arcs
     }
 
+    function drag_router(d) {
+      return (d3.event.sourceEvent = '')
+      
+    }
+
     function inner() {
 
       if (!inner.wheel){
         
-        inner.wheel = this.append('g');
+        inner.wheel = this.append('g')
+          .call(
+            d3.behavior.drag().on("drag", rotate_wheel)
+          );
         
         inner.wheel.transform =  new transform(inner.wheel);
-        
-        inner.wheel.call(
-          d3.behavior.drag().on("drag", rotate_wheel)
-        );
-        
+                
         inner.wheel.category = category;
         
         inner.wheel.data = update;
