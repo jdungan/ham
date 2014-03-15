@@ -1,5 +1,75 @@
 "use strict";
 
+// add swipe up and dow to jquerymobile
+//http://stackoverflow.com/questions/17131815/how-to-swipe-top-down-jquery-mobile
+(function() {
+    var supportTouch = $.support.touch,
+            scrollEvent = "touchmove scroll",
+            touchStartEvent = supportTouch ? "touchstart" : "mousedown",
+            touchStopEvent = supportTouch ? "touchend" : "mouseup",
+            touchMoveEvent = supportTouch ? "touchmove" : "mousemove";
+    $.event.special.swipeupdown = {
+        setup: function() {
+            var thisObject = this;
+            var $this = $(thisObject);
+            $this.bind(touchStartEvent, function(event) {
+                var data = event.originalEvent.touches ?
+                        event.originalEvent.touches[ 0 ] :
+                        event,
+                        start = {
+                            time: (new Date).getTime(),
+                            coords: [ data.pageX, data.pageY ],
+                            origin: $(event.target)
+                        },
+                        stop;
+
+                function moveHandler(event) {
+                    if (!start) {
+                        return;
+                    }
+                    var data = event.originalEvent.touches ?
+                            event.originalEvent.touches[ 0 ] :
+                            event;
+                    stop = {
+                        time: (new Date).getTime(),
+                        coords: [ data.pageX, data.pageY ]
+                    };
+
+                    // prevent scrolling
+                    if (Math.abs(start.coords[1] - stop.coords[1]) > 10) {
+                        event.preventDefault();
+                    }
+                }
+                $this
+                        .bind(touchMoveEvent, moveHandler)
+                        .one(touchStopEvent, function(event) {
+                    $this.unbind(touchMoveEvent, moveHandler);
+                    if (start && stop) {
+                        if (stop.time - start.time < 1000 &&
+                                Math.abs(start.coords[1] - stop.coords[1]) > 30 &&
+                                Math.abs(start.coords[0] - stop.coords[0]) < 75) {
+                            start.origin
+                                    .trigger("swipeupdown")
+                                    .trigger(start.coords[1] > stop.coords[1] ? "swipeup" : "swipedown");
+                        }
+                    }
+                    start = stop = undefined;
+                });
+            });
+        }
+    };
+    $.each({
+        swipedown: "swipeupdown",
+        swipeup: "swipeupdown"
+    }, function(event, sourceEvent){
+        $.event.special[event] = {
+            setup: function(){
+                $(this).bind(sourceEvent, $.noop);
+            }
+        };
+    });
+
+})();
 
 // location watch object
 
@@ -87,64 +157,65 @@ var arc2deg = function(x) {
 }
 
 
-//tranform function to be added to svg objects
-function transform(element) {
-  var order = ['translate', 'scale', 'rotate']
+//tranform function to be added to a d3 objects
 
-  function xcy() {
-    return this.value.x + ',' + this.value.y
-  };
+  function Transform(element) {
+    var order = ['translate', 'scale', 'rotate'];
+  
+    function xyString() {
+      return this.value.x + ',' + this.value.y
+    };
 
-  var inner = {
-    translate: {
-      value: {
-        x: 0,
-        y: 0
+    var inner = {
+      translate: {
+        value: {
+          x: 0,
+          y: 0
+        },
+        string: xyString
       },
-      string: xcy
-    },
-    scale: {
-      value: {
-        x: 1,
-        y: 1
+      scale: {
+        value: {
+          x: 1,
+          y: 1
+        },
+        string: xyString
       },
-      string: xcy
-    },
-    rotate: {
-      value: 0,
-      string: function() {
-        return this.value
+      rotate: {
+        value: 0,
+        string: function() {
+          return this.value
+        }
       }
+    };
+
+
+    order.forEach(function(v) {
+      this[v] = function(d) {
+        if (d == undefined) {
+          return inner[v].value;
+        } else {
+          inner[v].value = d;
+          return this;
+        }
+      }
+    }, this);
+
+    this.render = function() {
+      element.attr('transform', this.toString());
     }
-  };
 
-
-  order.forEach(function(v) {
-
-    this[v] = function (d) {
-      if (d){
-        inner[v].value = d;
-      }  
-      return d ? this : inner[v].value
+    this.toString = function() {
+      return order.map(
+        function(v) {
+          return v + '(' + inner[v].string() + ')'
+        },
+        this).join(' ');
     }
-    
-  }, this);
 
-  this.render = function () {
-    element.attr('transform',this.toString());
   }
 
-  this.toString = function() {
-    return order.map(
-      function(v) {
-        return v + '(' + inner[v].string() + ')'
-      },
-      this).join(' ');
-  }
-
-}
-
-// d3 based wheel control
+  // d3 based wheel control
 
   function Wheel(options) {
     var options = options || {
@@ -152,44 +223,40 @@ function transform(element) {
       icon_types: ['home', 'group', 'dollar', 'check'],
     };
 
-    var category = d3.scale.quantize().domain([360, 0])
-
-    function drag_icon(e){
-      d3.event.sourceEvent.stopPropagation();
-      console.log('icon drag')
+    function drag_icon(d) {
       
+      var icon = d3.select(d3.event.sourceEvent.srcElement)
+        
+      icon.attr({
+        cx:(+icon.attr('cx')+d3.event.dx),
+        cy:(+icon.attr('cy')+d3.event.dy)
+      })  
     }
 
-    function rotate_wheel (d) {
+    function rotate_wheel(d) {
       var wheel = inner.wheel;
       var transform = inner.wheel.transform;
-      console.log(d3.event.sourceEvent)
-      //shift for translate
-      var eventX = d3.event.x - transform.translate().x;
-      var eventY = d3.event.y - transform.translate().y;
-
-      // //get angle from g center to mouse         
-      var start_angle = Math.atan2(eventY - d3.event.dy, eventX - d3.event.dx);
-      var end_angle = Math.atan2(eventY, eventX);
-      var degree_diff = Math.round(arc2deg(end_angle - start_angle))
-
-      var new_rotate = transform.rotate() + degree_diff;
-      transform.rotate(new_rotate % 360 + (new_rotate >= 0 ? 0 : 360));
-      wheel.transform.render
-      $(wheel.node()).trigger('rotate', transform.rotate())
-
+      
+      
+      // //get angles from g center to mouse         
+      var new_angle = Math.atan2(d3.event.y , d3.event.x)
+      var new_rotate = Math.round(arc2deg(new_angle))
+     
+      console.log(new_rotate)
+      transform
+        .rotate(new_rotate % 360 + (new_rotate >= 0 ? 0 : 360))
+        .render()
     };
-
 
     function update(new_data) {
 
       if (new_data) {
-  
+
         var interval = 2 * Math.PI / new_data.length;
 
         inner.wheel.interval = interval;
-        
-        category.range(new_data);
+
+        inner.wheel.categorize.range(new_data);
 
         var arc = d3.svg.arc()
           .outerRadius(100)
@@ -201,12 +268,13 @@ function transform(element) {
             return (i + 1) * interval;
           });
 
-        var arcs = this.selectAll('g.arcs')
-          .data(new_data)
-          .enter()
+        var arcs = this.selectAll('g.arcs').data(new_data)
+        
+        arcs.enter()
           .append('g')
           .attr('class', 'arcs dont_select')
-          
+
+        arcs.exit().remove()
 
         arcs.append("svg:path")
           .attr({
@@ -217,65 +285,66 @@ function transform(element) {
             fill: function(d, i) {
               return options.colors(i);
             }
-          })
-          
+          }) 
 
-        arcs
-          .append('svg:use')
-            .attr('xlink:href', function(d, i) {
-              return '#' + options.icon_types[i]
-            })
-            .attr('id', function(d, i) {
-              return 'icon' + i
-            })
-            .attr("transform", function(d, i) {
-              var angle = interval * i + (interval / 2),
-                r = 90,
-                x = r * Math.sin(angle),
-                y = r * Math.cos(angle);
-              var icon_transform = new transform();
-              icon_transform.translate({
+
+        arcs.each(function(d, i) {
+
+            var icon = d3.select(this).append('g')
+            icon.transform = new Transform(icon);
+
+           var angle = interval * i + (interval / 2),
+              r = 90,
+              x = r * Math.sin(angle),
+              y = r * Math.cos(angle);
+
+            icon.transform
+              .translate({
                 x: x,
                 y: -y
               })
-              icon_transform.rotate(arc2deg(angle));
-              return icon_transform.toString();
-            })
-            .call(
-                d3.behavior.drag().on("drag", drag_icon)
-            )
+              .rotate(arc2deg(angle))
+              .render()
 
-        this.transform.render;
-        
-      }
-      return arcs
+              // icon.append('circle')
+              // .attr({cx:0,cy:15, r:20,'fill-opacity':0.2,fill:'white',stroke:'black'})
+              // .call(
+              //       d3.behavior.drag().on("drag", drag_icon)
+              // );
+
+
+            icon.append('svg:use')
+              .attr(
+                {'xlink:href': '#' + options.icon_types[i],
+                'id': 'icon' + i
+              })
+
+        });
+
+      this.transform.render;
+
     }
 
-    function drag_router(d) {
-      return (d3.event.sourceEvent = '')
-      
-    }
-
-    function inner() {
-
-      if (!inner.wheel){
-        
-        inner.wheel = this.append('g')
-          .call(
-            d3.behavior.drag().on("drag", rotate_wheel)
-          );
-        
-        inner.wheel.transform =  new transform(inner.wheel);
-                
-        inner.wheel.category = category;
-        
-        inner.wheel.data = update;
-      } 
-      
-      return inner.wheel;
-    
-    }
-
-    return inner;
-    
+    return arcs
   }
+
+  function inner() {
+
+    if (!inner.wheel) {
+
+      inner.wheel = this.append('g')
+      
+      inner.wheel.transform = new Transform(inner.wheel);
+
+      inner.wheel.categorize = d3.scale.quantize().domain([360, 0]);
+
+      inner.wheel.data = update;
+    }
+
+    return inner.wheel;
+
+  }
+
+return inner;
+
+}

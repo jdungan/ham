@@ -8,7 +8,23 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   
   <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.0/jquery.mobile-1.4.0.min.css" id='jQMnDColor' />
-  <link rel="stylesheet" href="css/sgh.css" id='jQMnDColor' />
+	<!-- FontAwesome - http://fortawesome.github.io/Font-Awesome/ -->
+    <link rel="stylesheet" href="css/font-awesome.min.css" />
+
+<!-- nativeDroid core CSS -->
+  <link rel="stylesheet" href="css/jquerymobile.nativedroid.css" />
+
+<!-- nativeDroid: Light/Dark -->
+  <link rel="stylesheet" href="css/jquerymobile.nativedroid.dark.css"  id='jQMnDTheme' />
+
+<!-- nativeDroid: Color Schemes -->
+  <link rel="stylesheet" href="css/jquerymobile.nativedroid.color.blue.css" id='jQMnDColor' />
+
+
+
+  <!-- <link rel="stylesheet" href="css/sgh.css" id='jQMnDColor' /> -->
+
+
 
   <script src= "http://code.jquery.com/jquery-1.10.2.min.js"></script>
   <script src= "http://code.jquery.com/mobile/1.4.0/jquery.mobile-1.4.0.min.js"></script>
@@ -22,11 +38,15 @@
 <body>
   
   <div id='dialer' data-role='page'>
-    <div id = 'header' data-role = ' header'>SGH</div>
+    <div data-role="header" data-position="fixed"  data-theme="b" role="banner">
+        <h1 class="ui-title" >
+            <i class="icon-stethoscope">&nbsp;Sitegeist Health</i>
+        </h1>
+    </div>
     <div id ='category' data-role = 'content'>
+      <ul data-role="listview" id='title' ></ul>
       
-      <div id='grade' ></div>
-      <div id='title' ></div>
+      
       <svg id='canvas' width=1000 height=1000></svg>
       
     </div>
