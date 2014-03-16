@@ -44,7 +44,11 @@ $("#dialer").on("pagecreate", function() {
   svg.category = function () {
     return svg.wheel().categorize(svg.wheel().transform.rotate())
   }
-  
+
+  svg.update_score =function () {
+    
+    d3.select('#score').select('text').text(scores(svg.category().score)+':'+svg.category().score)
+  }
 
   svg.levels =[];
   
@@ -64,7 +68,8 @@ $("#dialer").on("pagecreate", function() {
             .render();
         }        
         $('#title').children().last().remove();
-        d3.select('#score').select('text').text(scores(svg.category().score))
+        
+        svg.update_score()
       }
     }
     
@@ -81,7 +86,7 @@ $("#dialer").on("pagecreate", function() {
         .append('li')
         .text(svg.category().label);
       
-      d3.select('#score').select('text').text(scores(svg.category().score))
+        svg.update_score()
     }
 
 
@@ -96,7 +101,7 @@ $("#dialer").on("pagecreate", function() {
     
     $('#title').children().last().text(svg.category().label)
     
-    d3.select('#score').select('text').text(scores(svg.category().score))
+    svg.update_score()
     
   }
   
@@ -124,7 +129,7 @@ $("#dialer").on("pagecreate", function() {
         
         svg.wheel().data(data.elements);
         
-        d3.select('#score').select('text').text(scores(svg.category().score))      
+        svg.update_score()
             
         d3.select('#title')
           .append('li')

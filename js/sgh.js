@@ -156,7 +156,7 @@ var arc2deg = function(x) {
   return 180 * (x / Math.PI)
 }
 
-var absDeg = function(newDegree){
+var absDeg = function(newDegree) {
   return (newDegree % 360 + (newDegree >= 0 ? 0 : 360))
 }
 
@@ -224,7 +224,7 @@ var absDeg = function(newDegree){
   function Wheel(options) {
     var options = options || {
       colors: d3.scale.category10(),
-      icon_types: ['home', 'group', 'dollar', 'check'],
+      icon_types: ['\uf01a', '\uf01d', '\uf0ac', '\uf0e3','\uf005'],
     };
 
 
@@ -275,10 +275,10 @@ var absDeg = function(newDegree){
 
         var arcs = this.selectAll('path.arcs').data(new_data)
 
-        arcs.enter().append("svg:path")
-        
-        arcs.attr({
-            class: 'arcs dont_select',
+        arcs.enter()
+          .append("svg:path")
+          .attr({
+            'class': 'dont_select',
             id: function(d, i) {
               return 'path' + i
             },
@@ -287,67 +287,77 @@ var absDeg = function(newDegree){
               return options.colors(i);
             }
           })
-          .append('svg:use')
+                  
+        arcs.exit().remove()
 
-        .each(function(d, i) {
+        var icons = this.selectAll('text.fa-icon').remove()
+        
+        icons = this.selectAll('text.fa-icon').data(arcs[0])
 
+        icons.enter().append('text')
+          .attr({
+            'class':'fa-icon dont_select',
+            'font-family': 'FontAwesome',
+            'font-size': '20px',
+            'text-anchor': 'middle',
+            'dominant-baseline': 'central'
+          })
+          .text(function(d,i) {
+            return options.icon_types[i];
+          });
+        
+        icons.exit().remove()
+
+        icons.each(function(d, i) {
           var icon = d3.select(this)
-            icon.attr({
-                'xlink:href': '#' + options.icon_types[i],
-                'id': 'icon' + i
-              })
-              
-              icon.transform = new Transform(icon);
-              
-              var angle = interval * i + (interval / 2),
-                r = 90,
-                x = r * Math.sin(angle),
-                y = r * Math.cos(angle);
 
-              icon.transform
-              .translate({
-                x: x,
-                y: -y
-              })
-              .rotate(arc2deg(angle))
-              .render()
-
+          icon.transform = new Transform(icon);
+        
+          var angle = interval * i + (interval / 2),
+            r = 80,
+            x = r * Math.sin(angle),
+            y = r * Math.cos(angle);
+        
+          icon.transform
+            .translate({
+              x: x,
+              y: -y
             })
+            .rotate(arc2deg(angle))
+            .render()
+        
+        })
 
-          
+        //nudge the rotation to position the middle of the first arc at the top                
+        inner.wheel.transform
+          .rotate(absDeg(-arc2deg(interval / 2)))
+          .render()
 
-          arcs.exit().remove()
-
-          //nudge the rotation to position the middle of the first arc at the top                
-          inner.wheel.transform
-              .rotate(absDeg(-arc2deg(interval / 2)))
-              .render()
-
-
-        }
-
-        return arcs
-      }
-
-      function inner() {
-
-        if (!inner.wheel) {
-
-          inner.wheel = this.append('g')
-
-          inner.wheel.transform = new Transform(inner.wheel);
-
-          inner.wheel.categorize = d3.scale.quantize().domain([360, 0]);
-
-          inner.wheel.data = update;
-
-
-        }
-
-        return inner.wheel;
 
       }
 
-      return inner;
+      return arcs
+    }
+
+    function inner() {
+
+      if (!inner.wheel) {
+
+        inner.wheel = this.append('g')
+
+        inner.wheel.transform = new Transform(inner.wheel);
+
+        inner.wheel.categorize = d3.scale.quantize().domain([360, 0]);
+
+        inner.wheel.data = update;
+
+
+      }
+
+      return inner.wheel;
 
     }
+
+    return inner;
+
+  }
