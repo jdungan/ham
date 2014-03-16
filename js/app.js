@@ -20,7 +20,7 @@ $("#dialer").on("pagecreate", function() {
   score
     .transform.translate({
       x: window.innerWidth / 2,
-      y: window.innerHeight * 0.25 
+      y: window.innerHeight * 0.1 
     })
     .scale({
       x: 4,
