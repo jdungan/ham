@@ -14,8 +14,6 @@ $("#dialer").on("pagecreate", function() {
   var score = svg.append('g')
     .attr('id', 'score')
     .append('text')
-    // .text(scores(circles[0].score))
-    .text('A')
     
   score.transform = new Transform(score)
   
@@ -41,24 +39,47 @@ $("#dialer").on("pagecreate", function() {
       x: 2,
       y: 2
     })
+    .render()
+    
+  svg.category = function () {
+    return svg.wheel().categorize(svg.wheel().transform.rotate())
+  }
+  
 
-    svg.category = function () {
-      return svg.wheel().categorize(svg.wheel().transform.rotate())
-    }
-
-
+  svg.levels =[];
+  
   $( "#canvas" ).on( "swipeup", function( event ) {
     console.log('up')
+    if (svg.levels.length != 1) {
+      svg.levels.splice(-1);
+      var level = svg.levels[svg.levels.length-1];
+        
+      if (level) {
+        svg.wheel().data(level.elements);
+      
+        if (level.rotation){
+          svg.wheel()
+            .transform
+            .rotate(level.rotation)
+            .render();
+        }        
+        $('#title').children().last().remove();
+        d3.select('#score').select('text').text(scores(svg.category().score))
+      }
+    }
     
-  })
+  });
+  
   $( "#canvas" ).on( "swipedown", function( event ) {
     console.log('down')
-
     if (svg.category().elements) {
-      svg.wheel().data(svg.category().elements);
+      svg.levels[svg.levels.length-1].rotation = svg.wheel().transform.rotate()
+      svg.levels.push(svg.category());
+      svg.wheel().data(svg.category().elements); 
+ 
       d3.select('#title')
         .append('li')
-        .text(svg.category().label)
+        .text(svg.category().label);
       
       d3.select('#score').select('text').text(scores(svg.category().score))
     }
@@ -67,15 +88,10 @@ $("#dialer").on("pagecreate", function() {
   })
   
   function turn_wheel(direction){
-
     var new_rotate =  svg.wheel().transform.rotate()+(direction * arc2deg(svg.wheel().interval))
-    
-    var new_rotation = new_rotate % 360 + (new_rotate >= 0 ? 0 : 360)
-    
-    
     svg.wheel()
       .transform
-        .rotate(new_rotation)
+        .rotate(absDeg(new_rotate))
         .render()
     
     $('#title').children().last().text(svg.category().label)
@@ -100,18 +116,19 @@ $("#dialer").on("pagecreate", function() {
   sgh.ready.done(function() {
     sgh.sample()
       .done(function(data) {
-        svg.wheel().data(data.scores);
-        console.log(data);
-        //nudge the rotation to position the middle of the first arc at the top
-        svg.wheel()
-          .transform
-            .rotate(-arc2deg(svg.wheel().interval / 2))
-            .render()
+        
+        // patch for nesting
+        data.elements = data.scores;
+        
+        svg.levels.push(data)
+        
+        svg.wheel().data(data.elements);
+        
+        d3.select('#score').select('text').text(scores(svg.category().score))      
             
         d3.select('#title')
           .append('li')
           .text(svg.category().label)
-        
 
       })
       .error(function(d) {
