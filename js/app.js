@@ -97,8 +97,11 @@ $("#dialer").on("pagecreate", function() {
     svg.wheel()
       .transform
         .rotate(absDeg(new_rotate))
-        .render()
     
+        svg.wheel().transition()
+        .duration(2000)
+        .attr('transform',svg.wheel().transform.toString())
+
     $('#title').children().last().text(svg.category().label)
     
     svg.update_score()
