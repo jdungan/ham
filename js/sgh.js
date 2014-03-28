@@ -275,7 +275,7 @@ function Wheel(options) {
     
     if (new_data) {
           
-      var interval = 2 * Math.PI / 6// new_data.length;
+      var interval = 2 * Math.PI / 8// new_data.length;
 
       new_data.push([{}])
       new_data.push([{}])
@@ -328,7 +328,7 @@ function Wheel(options) {
         })
         .text(function(d,i) {
           d.icon = options.icon_types[i];
-          console.log({assign:d.icon})
+          // console.log({assign:d.icon})
           return fa_translate(options.icon_types[i]);
         })
       
@@ -350,7 +350,7 @@ function Wheel(options) {
 
           icon.attr({'opacity':'1'})
 
-          var pos = i<=1 ? i : 5
+          var pos = i<=1 ? i : 7
           var angle = interval * pos,// + (interval / 2),
             r = 80,
             x = r * Math.sin(angle),
@@ -366,7 +366,7 @@ function Wheel(options) {
             .scale((function (d,i) {
               var values={x:.75 , y:.75};
               if (i===0){
-                values={x:2.5 , y:2.5}
+                values={x:2 , y:2}
               }
               return values
             })(d,i))
@@ -375,6 +375,7 @@ function Wheel(options) {
         } else {
           
           inner.wheel.hidden_icons.unshift(icon)
+          
           
         }
       

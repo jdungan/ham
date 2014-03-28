@@ -34,11 +34,11 @@ $("#dialer").on("pagecreate", function() {
   svg.wheel().transform
     .translate({
       x: (window.innerWidth / 2),
-      y: (window.innerHeight * 0.8)
+      y: (window.innerHeight * 0.9)
     })
     .scale({
-      x: 3,
-      y: 3
+      x: 4,
+      y: 4
     })
     .animate()
     
@@ -100,8 +100,9 @@ $("#dialer").on("pagecreate", function() {
   function turn_wheel(direction){
     turn_wheel.degrees = turn_wheel.degrees || arc2deg(svg.wheel().interval);
     turn_wheel.swipes = turn_wheel.swipes || 0;    
+
     
-    turn_wheel.swipes += direction; 
+    turn_wheel.swipes = direction===0 ? 0 : turn_wheel.swipes+= direction; 
     
     console.log(turn_wheel.swipes)
     
@@ -147,13 +148,13 @@ direction===1
 
   grow_icon.datum()
     .transform
-    .scale({x:2.5,y:2.5})
+    .scale({x:2,y:2})
     .animate()
         
   reveal_icon.datum() 
     .transform
     .translate((function (pos) {
-      var angle = interval * -(turn_wheel.swipes+direction)
+      var angle = interval* -(turn_wheel.swipes+direction)
       var   r = 80,
         x = r * Math.sin(angle),
         y = r * Math.cos(angle);
