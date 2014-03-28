@@ -155,6 +155,9 @@ var sgh = new(function api() {
 var arc2deg = function(x) {
   return 180 * (x / Math.PI)
 }
+var deg2arc = function(x) {
+  return (Math.PI*2)/x
+}
 
 var absDeg = function(newDegree) {
   return (newDegree % 360 + (newDegree >= 0 ? 0 : 360))
@@ -164,6 +167,12 @@ var fa_translate = function (name){
   return String.fromCharCode(parseInt(fa_ucode[name],16))
 }
 
+var fromCenter = function (radius,degrees) {
+  var r = deg2arc(degrees),
+      x = r * Math.sin(degrees),
+      y = r * Math.cos(degrees);
+      return  {x: x,y: -y}
+    }
 
 //tranform function to be added to a d3 objects
 
@@ -275,10 +284,10 @@ function Wheel(options) {
     
     if (new_data) {
           
-      var interval = 2 * Math.PI / 8// new_data.length;
+      var interval = 2 * Math.PI / 10// new_data.length;
 
-      new_data.push([{}])
-      new_data.push([{}])
+      // new_data.push([{}])
+      // new_data.push([{}])
       
 
       inner.wheel.interval = interval;
@@ -339,9 +348,7 @@ function Wheel(options) {
         var icon = d3.select(this)
 
         d.transform = new Transform(icon);
-        
-        d.position = i;
-        
+                
         if(i<=1 || i===(new_data.length-1) || false){
           
           i <= 1 
@@ -350,7 +357,7 @@ function Wheel(options) {
 
           icon.attr({'opacity':'1'})
 
-          var pos = i<=1 ? i : 7
+          var pos = i<=1 ? i : 9
           var angle = interval * pos,// + (interval / 2),
             r = 80,
             x = r * Math.sin(angle),
@@ -364,9 +371,9 @@ function Wheel(options) {
             })
             .rotate(arc2deg(angle))
             .scale((function (d,i) {
-              var values={x:.75 , y:.75};
+              var values={x:.5 , y:.5};
               if (i===0){
-                values={x:2 , y:2}
+                values={x:1.5 , y:1.5}
               }
               return values
             })(d,i))
