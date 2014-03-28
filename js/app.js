@@ -34,11 +34,11 @@ $("#dialer").on("pagecreate", function() {
   svg.wheel().transform
     .translate({
       x: (window.innerWidth / 2),
-      y: (window.innerHeight * 0.9)
+      y: (window.innerHeight * 0.5)
     })
     .scale({
-      x: 4,
-      y: 4
+      x: 2,
+      y: 2
     })
     .animate()
     
