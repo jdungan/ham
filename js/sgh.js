@@ -167,10 +167,10 @@ var fa_translate = function (name){
   return String.fromCharCode(parseInt(fa_ucode[name],16))
 }
 
-var fromCenter = function (radius,degrees) {
-  var r = deg2arc(degrees),
-      x = r * Math.sin(degrees),
-      y = r * Math.cos(degrees);
+var fromCenter = function (radius,radians) {
+  var r = radius,
+      x = r * Math.sin(radians),
+      y = r * Math.cos(radians);
       return  {x: x,y: -y}
     }
 
@@ -283,8 +283,10 @@ function Wheel(options) {
   function update(new_data) {
     
     if (new_data) {
+      
+      var spots = 18;
           
-      var interval = 2 * Math.PI / 10// new_data.length;
+      var interval = 2 * Math.PI / spots// new_data.length;
 
       // new_data.push([{}])
       // new_data.push([{}])
@@ -342,6 +344,9 @@ function Wheel(options) {
         })
       
       icons.exit().remove()
+      inner.wheel.visible_icons=[]
+      inner.wheel.hidden_icons=[]
+
 
       icons.each(function(d, i) {
 
@@ -352,12 +357,12 @@ function Wheel(options) {
         if(i<=1 || i===(new_data.length-1) || false){
           
           i <= 1 
-          ? inner.wheel.visible_icons.push(icon)
-          : inner.wheel.visible_icons.unshift(icon)
+            ? inner.wheel.visible_icons.push(icon)
+            : inner.wheel.visible_icons.unshift(icon)
 
           icon.attr({'opacity':'1'})
 
-          var pos = i<=1 ? i : 9
+          var pos = i<=1 ? i : spots-1
           var angle = interval * pos,// + (interval / 2),
             r = 80,
             x = r * Math.sin(angle),
