@@ -173,7 +173,10 @@ var fromCenter = function (radius,radians) {
       y = r * Math.cos(radians);
       return  {x: x,y: -y}
     }
-
+var clone_node = function(node,parent) {
+        return d3.select(node.parentNode.insertBefore(node.cloneNode(true),
+    node.nextSibling));
+      }
 //tranform function to be added to a d3 objects
 
 function Transform(element) {
@@ -274,31 +277,101 @@ function Transform(element) {
 
 // d3 based wheel control
 
-function Wheel(options) {
+function Wheel(element) {
   var options = options || {
     colors: d3.scale.category10(),
     icon_types: ['home','facebook','github','twitter','bell','camera'],
-  };
+    arc:95,
+    icon: 80
+  },
+  element = element || {},
+  visible_icons=[],
+  hidden_icons=[],
+  spots = 15,  
+  interval = {radians:(2 * Math.PI / spots),degrees:(360/spots)}
+
+  function turn_wheel(direction){
+
+    turn_wheel.swipes = turn_wheel.swipes || 0;    
+    turn_wheel.swipes = direction===0 ? 0 : turn_wheel.swipes+= direction; 
+        
+    var current_rotation = inner.wheel.transform.rotate(),
+    new_rotate =  current_rotation+(-direction * interval.degrees),
+    shrink_icon= visible_icons[1],
+    grow_icon= visible_icons[(direction===1 ? 2 : 0)],
+    reveal_angle = interval.radians* (turn_wheel.swipes+direction);
+
+
+//find the icon to reveal        
+    var reveal_icon = direction===1
+      ? hidden_icons.pop()
+      : hidden_icons.shift()
+
+// move it to visible arrary
+    direction===1
+      ? visible_icons.push(reveal_icon)
+      : visible_icons.unshift(reveal_icon)
+        
+//find the icon to hide
+    var hide_icon = direction===1 
+      ? visible_icons.shift()
+      : visible_icons.pop()
+
+//move it to the hidden array
+    direction===1
+      ? hidden_icons.unshift(hide_icon)
+      : hidden_icons.push(hide_icon)
+
+
+//start animations
+    
+    shrink_icon.datum()
+      .transform
+      .scale({x:.5,y:.5})
+      .animate()
+
+    grow_icon.datum()
+      .transform
+      .scale({x:1.5,y:1.5})
+      .animate()
+
+       
+    reveal_icon.datum() 
+      .transform
+      .translate(fromCenter(options.icon,reveal_angle))
+      .rotate(arc2deg(reveal_angle))
+      .scale({x:.5 , y:.5})
+      .animate({'opacity':'1',duration:50})
+
+    inner.wheel
+      .transform
+      .rotate(new_rotate)
+      .animate()
+
+    hide_icon.datum() 
+      .transform
+      .translate({x: 0,y: 0})
+      .rotate(0)
+      .scale({x:.5 , y:.5})
+      .animate({'opacity': '0',duration:500})
+    
+    
+      return grow_icon;
+    }
 
   function update(new_data) {
     
     if (new_data) {
       
-      var spots = 18;
-          
-      var interval = 2 * Math.PI / spots// new_data.length;
-
       // new_data.push([{}])
       // new_data.push([{}])
       
 
       inner.wheel.interval = interval;
 
-      inner.wheel.categorize.range(new_data);          
-        
       var arc = d3.svg.arc()
-        .outerRadius(82)
-        .innerRadius(78)
+        .outerRadius(options.arc)
+        .innerRadius(options.arc-2)
         .startAngle(0)
         .endAngle(2*Math.PI)
         
@@ -317,17 +390,10 @@ function Wheel(options) {
                 
 
       this.selectAll('text.fa-icon').remove()
-      
-      // var pos=inner.wheel.positions = d3.scale.quantize()
-      //   .domain([0, 5])
-      //   .range([0,60,120,180,240,320])
-      //   
-      //
-       
+             
       var icons = this.selectAll('text.fa-icon').data(new_data)
       
-      icons.enter()
-  
+      icons.enter()  
       .append('text')
         .attr({
           'class':'fa-icon dont_select',
@@ -344,8 +410,8 @@ function Wheel(options) {
         })
       
       icons.exit().remove()
-      inner.wheel.visible_icons=[]
-      inner.wheel.hidden_icons=[]
+      visible_icons=[]
+      hidden_icons=[]
 
 
       icons.each(function(d, i) {
@@ -357,14 +423,14 @@ function Wheel(options) {
         if(i<=1 || i===(new_data.length-1) || false){
           
           i <= 1 
-            ? inner.wheel.visible_icons.push(icon)
-            : inner.wheel.visible_icons.unshift(icon)
+            ? visible_icons.push(icon)
+            : visible_icons.unshift(icon)
 
           icon.attr({'opacity':'1'})
 
           var pos = i<=1 ? i : spots-1
-          var angle = interval * pos,// + (interval / 2),
-            r = 80,
+          var angle = interval.radians * pos,// + (interval / 2),
+            r = options.icon,
             x = r * Math.sin(angle),
             y = r * Math.cos(angle);
 
@@ -386,7 +452,7 @@ function Wheel(options) {
           
         } else {
           
-          inner.wheel.hidden_icons.unshift(icon)
+          hidden_icons.unshift(icon)
           
           
         }
@@ -403,17 +469,17 @@ function Wheel(options) {
 
     if (!inner.wheel) {
 
-      inner.wheel = this.append('g')
+      inner.wheel = element.append('g')
 
       inner.wheel.transform = new Transform(inner.wheel);
 
-      inner.wheel.categorize = d3.scale.quantize().domain([360, 0]);
-
       inner.wheel.data = update;
-
-      inner.wheel.hidden_icons =[]
       
-      inner.wheel.visible_icons =[]
+      inner.wheel.turn = turn_wheel;
+      
+      inner.wheel.focus = function () {
+        return visible_icons[1];
+      }
 
     }
 
@@ -425,6 +491,33 @@ function Wheel(options) {
 
 }
 
+function ScoreCard(element) {
+  var options = options ||{}
+    
+    var scores = d3.scale.quantize()
+      .domain([0, 1])
+      .range(['F', 'F', 'F', 'F', 'F', 'D', 'C', 'B', 'A']);
+    
+    
+    var update_score =function (d) {
+    
+        inner.text.text(scores(d.score)+':'+d.score)
+      }
+    
+    
+    function inner() {
+      if (!inner.card){
+        inner.card = element.append('g');
+        inner.card.transform = new Transform(inner.card)
+        inner.text = inner.card          
+          .attr('id', 'score')
+          .append('text')
+        inner.card.setScore = update_score;
+      }
+      return inner.card;      
+    }
+    return inner
+}
 
 //font awesome dictionary object
 var fa_ucode= {
