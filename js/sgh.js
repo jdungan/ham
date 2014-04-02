@@ -156,31 +156,34 @@ var arc2deg = function(x) {
   return 180 * (x / Math.PI)
 }
 var deg2arc = function(x) {
-  return (Math.PI*2)/x
+  return (Math.PI * 2) / x
 }
 
 var absDeg = function(newDegree) {
   return (newDegree % 360 + (newDegree >= 0 ? 0 : 360))
 }
 
-var fa_translate = function (name){
-  return String.fromCharCode(parseInt(fa_ucode[name],16))
+var fa_translate = function(name) {
+  return String.fromCharCode(parseInt(fa_ucode[name], 16))
 }
 
-var fromCenter = function (radius,radians) {
+var fromCenter = function(radius, radians) {
   var r = radius,
-      x = r * Math.sin(radians),
-      y = r * Math.cos(radians);
-      return  {x: x,y: -y}
-    }
-var clone_node = function(node,parent) {
-        return d3.select(node.parentNode.insertBefore(node.cloneNode(true),
+    x = r * Math.sin(radians),
+    y = r * Math.cos(radians);
+  return {
+    x: x,
+    y: -y
+  }
+}
+var clone_node = function(node, parent) {
+  return d3.select(node.parentNode.insertBefore(node.cloneNode(true),
     node.nextSibling));
-      }
+}
 //tranform function to be added to a d3 objects
 
-function Transform(element) {
-  var order = ['translate', 'scale', 'rotate'],
+  function Transform(element) {
+    var order = ['translate', 'scale', 'rotate'],
       inner = {
         translate: {
           value: {
@@ -205,322 +208,376 @@ function Transform(element) {
       };
 
 
-  function xyString() {
-    return this.value.x === this.value.y
-            ? this.value.x
-            : this.value.x + ',' + this.value.y
-  };
+    function xyString() {
+      return this.value.x === this.value.y ? this.value.x : this.value.x + ',' + this.value.y
+    };
 
-  function rotation(degree){
-    
-    if (degree===undefined){
-      return rotation.value || 0;
-    }
-    
-    if (degree!=rotation.value){
-      rotation.value=Math.round((degree % 360 + (degree >= 0 ? 0 : 360)))
-    }
-    return rotation.value
-  }
+    function rotation(degree) {
 
-
-  // add getters and setters for transform types in the order array
-  order.forEach(function(v) {
-    this[v] = function(d) {
-
-      var isFunction=(typeof inner[v].value === "function")
-      
-      if (d == undefined){
-        return isFunction ?inner[v].value() :inner[v].value
-      };
-
-      var new_value = (typeof d === 'function')
-        ? d(element)
-        : d
-
-      isFunction 
-        ? inner[v].value(new_value)
-        : inner[v].value = new_value
-      
-      return this;
-        
-      }    
-    }, this);
-
-  this.render = function() {
-    element.attr('transform', this.toString());
-  }
-
-  this.animate = function(options) {
-    var options = options ||{},
-        duration = options.duration || 500,
-        ease = options.ease || '',
-        opacity=options.opacity||'1';
-    
-    return element.transition()
-      .duration(duration)
-      .ease(d3.ease(ease))
-      .attr('transform',this.toString())
-      .attr('opacity',opacity)
-  }
-
-  this.toString = function() {
-    return order.map(
-      function(v) {
-        return v + '(' + inner[v].string() + ')'
-      },
-      this).join(' ');
-  }
-
-}
-
-
-// d3 based wheel control
-
-function Wheel(element) {
-  var options = options || {
-    colors: d3.scale.category10(),
-    icon_types: ['home','facebook','github','twitter','bell','camera'],
-    arc:95,
-    icon: 80
-  },
-  element = element || {},
-  visible_icons=[],
-  hidden_icons=[],
-  spots = 15,  
-  interval = {radians:(2 * Math.PI / spots),degrees:(360/spots)}
-
-  function turn_wheel(direction){
-
-    turn_wheel.swipes = turn_wheel.swipes || 0;    
-    turn_wheel.swipes = direction===0 ? 0 : turn_wheel.swipes+= direction; 
-        
-    var current_rotation = inner.wheel.transform.rotate(),
-    new_rotate =  current_rotation+(-direction * interval.degrees),
-    shrink_icon= visible_icons[1],
-    grow_icon= visible_icons[(direction===1 ? 2 : 0)],
-    reveal_angle = interval.radians* (turn_wheel.swipes+direction);
-
-
-//find the icon to reveal        
-    var reveal_icon = direction===1
-      ? hidden_icons.pop()
-      : hidden_icons.shift()
-
-// move it to visible arrary
-    direction===1
-      ? visible_icons.push(reveal_icon)
-      : visible_icons.unshift(reveal_icon)
-        
-//find the icon to hide
-    var hide_icon = direction===1 
-      ? visible_icons.shift()
-      : visible_icons.pop()
-
-//move it to the hidden array
-    direction===1
-      ? hidden_icons.unshift(hide_icon)
-      : hidden_icons.push(hide_icon)
-
-
-//start animations
-    
-    shrink_icon.datum()
-      .transform
-      .scale({x:.5,y:.5})
-      .animate()
-
-    grow_icon.datum()
-      .transform
-      .scale({x:1.5,y:1.5})
-      .animate()
-
-       
-    reveal_icon.datum() 
-      .transform
-      .translate(fromCenter(options.icon,reveal_angle))
-      .rotate(arc2deg(reveal_angle))
-      .scale({x:.5 , y:.5})
-      .animate({'opacity':'1',duration:50})
-
-    inner.wheel
-      .transform
-      .rotate(new_rotate)
-      .animate()
-
-    hide_icon.datum() 
-      .transform
-      .translate({x: 0,y: 0})
-      .rotate(0)
-      .scale({x:.5 , y:.5})
-      .animate({'opacity': '0',duration:500})
-    
-    
-      return grow_icon;
-    }
-
-  function update(new_data) {
-    
-    if (new_data) {
-      
-      // new_data.push([{}])
-      // new_data.push([{}])
-      
-
-      inner.wheel.interval = interval;
-
-      var arc = d3.svg.arc()
-        .outerRadius(options.arc)
-        .innerRadius(options.arc-2)
-        .startAngle(0)
-        .endAngle(2*Math.PI)
-        
-      this
-        .append("svg:path")
-        .attr({
-          'class': 'dont_select',
-          id: function(d, i) {
-            return 'path' + i
-          },
-          d: arc,
-          fill: function(d, i) {
-            return 'silver' //options.colors(i);
-          }
-        })
-                
-
-      this.selectAll('text.fa-icon').remove()
-             
-      var icons = this.selectAll('text.fa-icon').data(new_data)
-      
-      icons.enter()  
-      .append('text')
-        .attr({
-          'class':'fa-icon dont_select',
-          'font-family': 'FontAwesome',
-          'font-size': '20px',
-          'text-anchor': 'middle',
-          'dominant-baseline': 'central',
-          'opacity': '0'          
-        })
-        .text(function(d,i) {
-          d.icon = options.icon_types[i];
-          // console.log({assign:d.icon})
-          return fa_translate(options.icon_types[i]);
-        })
-      
-      icons.exit().remove()
-      visible_icons=[]
-      hidden_icons=[]
-
-
-      icons.each(function(d, i) {
-
-        var icon = d3.select(this)
-
-        d.transform = new Transform(icon);
-                
-        if(i<=1 || i===(new_data.length-1) || false){
-          
-          i <= 1 
-            ? visible_icons.push(icon)
-            : visible_icons.unshift(icon)
-
-          icon.attr({'opacity':'1'})
-
-          var pos = i<=1 ? i : spots-1
-          var angle = interval.radians * pos,// + (interval / 2),
-            r = options.icon,
-            x = r * Math.sin(angle),
-            y = r * Math.cos(angle);
-
-      //beware the self executing anon function for scale
-          d.transform
-            .translate({
-              x: x,
-              y: -y
-            })
-            .rotate(arc2deg(angle))
-            .scale((function (d,i) {
-              var values={x:.5 , y:.5};
-              if (i===0){
-                values={x:1.5 , y:1.5}
-              }
-              return values
-            })(d,i))
-            .animate()          
-          
-        } else {
-          
-          hidden_icons.unshift(icon)
-          
-          
-        }
-      
-      })
-
-    }
-    
-    inner.wheel.icons = icons;
-    return icons
-  }
-
-  function inner() {
-
-    if (!inner.wheel) {
-
-      inner.wheel = element.append('g')
-
-      inner.wheel.transform = new Transform(inner.wheel);
-
-      inner.wheel.data = update;
-      
-      inner.wheel.turn = turn_wheel;
-      
-      inner.wheel.focus = function () {
-        return visible_icons[1];
+      if (degree === undefined) {
+        return rotation.value || 0;
       }
 
+      if (degree != rotation.value) {
+        rotation.value = Math.round((degree % 360 + (degree >= 0 ? 0 : 360)))
+      }
+      return rotation.value
     }
 
-    return inner.wheel;
+
+    // add getters and setters for transform types in the order array
+    order.forEach(function(v) {
+      this[v] = function(d) {
+
+        var isFunction = (typeof inner[v].value === "function")
+
+        if (d == undefined) {
+          return isFunction ? inner[v].value() : inner[v].value
+        };
+
+        var new_value = (typeof d === 'function') ? d(element) : d
+
+        isFunction ? inner[v].value(new_value) : inner[v].value = new_value
+
+        return this;
+
+      }
+    }, this);
+
+    this.render = function() {
+      element.attr('transform', this.toString());
+    }
+
+    this.animate = function(options) {
+      var options = options || {},
+        duration = options.duration || 500,
+        ease = options.ease || '',
+        opacity = options.opacity || '1';
+
+      return element.transition()
+        .duration(duration)
+        .ease(d3.ease(ease))
+        .attr('transform', this.toString())
+        .attr('opacity', opacity)
+    }
+
+    this.toString = function() {
+      return order.map(
+        function(v) {
+          return v + '(' + inner[v].string() + ')'
+        },
+        this).join(' ');
+    }
 
   }
 
-  return inner;
 
-}
+  // d3 based wheel control
 
-function ScoreCard(element) {
-  var options = options ||{}
-    
+  function Wheel(element) {
+    var options = options || {
+      colors: d3.scale.category10(),
+      icon_types: ['home', 'facebook', 'github', 'twitter', 'bell', 'camera'],
+      arc: 95,
+      icon: 80
+    },
+      element = element || {},
+      visible_icons = [],
+      hidden_icons = [],
+      spots = 15,
+      interval = {
+        radians: (2 * Math.PI / spots),
+        degrees: (360 / spots)
+      }
+
+      function turn_wheel(direction) {
+
+        turn_wheel.swipes = turn_wheel.swipes || 0;
+        turn_wheel.swipes = direction === 0 ? 0 : turn_wheel.swipes += direction;
+
+        var current_rotation = inner.wheel.transform.rotate(),
+          new_rotate = current_rotation + (-direction * interval.degrees),
+          shrink_icon = visible_icons[1],
+          grow_icon = visible_icons[(direction === 1 ? 2 : 0)],
+          reveal_angle = interval.radians * (turn_wheel.swipes + direction);
+
+
+        //find the icon to reveal        
+        var reveal_icon = direction === 1 ? hidden_icons.pop() : hidden_icons.shift()
+
+        // move it to visible arrary
+        direction === 1 ? visible_icons.push(reveal_icon) : visible_icons.unshift(reveal_icon)
+
+        //find the icon to hide
+        var hide_icon = direction === 1 ? visible_icons.shift() : visible_icons.pop()
+
+        //move it to the hidden array
+        direction === 1 ? hidden_icons.unshift(hide_icon) : hidden_icons.push(hide_icon)
+
+
+        //start animations
+
+        shrink_icon.datum()
+          .transform
+          .scale({
+            x: .5,
+            y: .5
+          })
+          .animate()
+
+        grow_icon.datum()
+          .transform
+          .scale({
+            x: 1.5,
+            y: 1.5
+          })
+          .animate()
+
+
+        reveal_icon.datum()
+          .transform
+          .translate(fromCenter(options.icon, reveal_angle))
+          .rotate(arc2deg(reveal_angle))
+          .scale({
+            x: .5,
+            y: .5
+          })
+          .animate({
+            'opacity': '1',
+            duration: 50
+          })
+
+        inner.wheel
+          .transform
+          .rotate(new_rotate)
+          .animate()
+
+        hide_icon.datum()
+          .transform
+          .translate({
+            x: 0,
+            y: 0
+          })
+          .rotate(0)
+          .scale({
+            x: .5,
+            y: .5
+          })
+          .animate({
+            'opacity': '0',
+            duration: 500
+          })
+
+
+        return grow_icon;
+      }
+
+      function update(new_data) {
+
+        if (new_data) {
+
+          inner.wheel.interval = interval;
+
+          var arc = d3.svg.arc()
+            .outerRadius(options.arc)
+            .innerRadius(options.arc - 2)
+            .startAngle(0)
+            .endAngle(2 * Math.PI)
+
+          this
+            .append("svg:path")
+            .attr({
+              'class': 'dont_select',
+              id: function(d, i) {
+                return 'path' + i
+              },
+              d: arc,
+              fill: function(d, i) {
+                return 'silver' //options.colors(i);
+              }
+            })
+
+
+          this.selectAll('text.fa-icon').remove()
+
+          var icons = this.selectAll('text.fa-icon').data(new_data)
+
+          icons.enter()
+            .append('text')
+            .attr({
+              'class': 'fa-icon dont_select',
+              'font-family': 'FontAwesome',
+              'font-size': '20px',
+              'text-anchor': 'middle',
+              'dominant-baseline': 'central',
+              'opacity': '0'
+            })
+            .text(function(d, i) {
+              d.icon = options.icon_types[i];
+              // console.log({assign:d.icon})
+              return fa_translate(options.icon_types[i]);
+            })
+
+          icons.exit().remove()
+          visible_icons = []
+          hidden_icons = []
+
+
+          icons.each(function(d, i) {
+
+            var icon = d3.select(this)
+
+            d.transform = new Transform(icon);
+
+            if (i <= 1 || i === (new_data.length - 1) || false) {
+
+              i <= 1 ? visible_icons.push(icon) : visible_icons.unshift(icon)
+
+              icon.attr({
+                'opacity': '1'
+              })
+
+              var pos = i <= 1 ? i : spots - 1
+              var angle = interval.radians * pos, // + (interval / 2),
+                r = options.icon,
+                x = r * Math.sin(angle),
+                y = r * Math.cos(angle);
+
+              //beware the self executing anon function for scale
+              d.transform
+                .translate({
+                  x: x,
+                  y: -y
+                })
+                .rotate(arc2deg(angle))
+                .scale((function(d, i) {
+                  var values = {
+                    x: .5,
+                    y: .5
+                  };
+                  if (i === 0) {
+                    values = {
+                      x: 1.5,
+                      y: 1.5
+                    }
+                  }
+                  return values
+                })(d, i))
+                .animate()
+
+            } else {
+
+              hidden_icons.unshift(icon)
+
+
+            }
+
+          })
+
+        }
+
+        inner.wheel.icons = icons;
+        return icons
+      }
+
+      function inner() {
+
+        if (!inner.wheel) {
+
+          inner.wheel = element.append('g')
+
+          inner.wheel.transform = new Transform(inner.wheel);
+
+          inner.wheel.data = update;
+
+          inner.wheel.turn = turn_wheel;
+
+          inner.wheel.focus = function() {
+            return visible_icons[1];
+          }
+
+        }
+
+        return inner.wheel;
+
+      }
+
+    return inner;
+
+  }
+
+  function ScoreCard(element) {
+    var options = options || {}
+
     var scores = d3.scale.quantize()
       .domain([0, 1])
       .range(['F', 'F', 'F', 'F', 'F', 'D', 'C', 'B', 'A']);
-    
-    
-    var update_score =function (d) {
-    
-        inner.text.text(scores(d.score)+':'+d.score)
-      }
-    
-    
-    function inner() {
-      if (!inner.card){
-        inner.card = element.append('g');
-        inner.card.transform = new Transform(inner.card)
-        inner.text = inner.card          
-          .attr('id', 'score')
-          .append('text')
-        inner.card.setScore = update_score;
-      }
-      return inner.card;      
-    }
-    return inner
-}
 
-//font awesome dictionary object
-var fa_ucode= {
+
+    var update_score = function(d) {
+      
+      inner.text.transition()
+      .duration(300)
+      .attr({opacity:0})
+      .transition()
+      .duration(300)
+      .text(scores(d.score))
+      .attr({opacity:1})
+      
+      
+    }
+
+      function inner() {
+        if (!inner.card) {
+          inner.card = element.append('g')
+            .attr('id', 'score')
+
+          inner.box = inner.card.append('rect')
+            .attr({
+              x:-15,
+              y:0,
+              width: 30,
+              height: 30,
+              stroke: 'silver',
+              'fill-opacity': 0
+            });
+
+          inner.text = inner.card
+            .append('text')
+            .attr({x:-5,y:20})
+
+          inner.info = inner.card
+            .append('text')
+            .attr({
+              x:27,
+              y:52,
+              'class': 'fa-icon dont_select',
+              'font-family': 'FontAwesome',
+              'font-size': '20px',
+              'text-anchor': 'middle',
+              'dominant-baseline': 'central',
+              'fill': 'grey'
+            })
+            .text(fa_translate('info-circle'))
+            
+              
+            inner.info.transform = new Transform(inner.info)
+            
+            inner.info.transform.scale({x:.5,y:.5}).render()
+
+
+          inner.card.transform = new Transform(inner.card)
+                    
+          inner.card.setScore = update_score;
+        }
+        return inner.card;
+      }
+    return inner
+  }
+
+
+  //font awesome dictionary object
+var fa_ucode = {
   glass: "f000",
   music: "f001",
   search: "f002",
@@ -822,7 +879,7 @@ var fa_ucode= {
   'pencil-square': "f14b",
   'external-link-square': "f14c",
   'share-square': "f14d",
-  compass: "f14e",
+  'compass': "f14e",
   'caret-square-o-down': "f150",
   'caret-square-o-up': "f151",
   'caret-square-o-right': "f152",
@@ -890,4 +947,4 @@ var fa_ucode= {
   'vimeo-square': "f194",
   'try': "f195",
   'plus-square-o': "f196"
-  }
+}

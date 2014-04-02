@@ -19,7 +19,7 @@ $("#dialer").on("pagecreate", function() {
         x: 4,
         y: 4
       })
-      .animate()
+      .render()
     return card()  
     }
 
