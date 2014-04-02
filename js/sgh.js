@@ -334,9 +334,14 @@ var clone_node = function(node, parent) {
           .animate()
 
 
+          reveal_icon.datum()
+            .transform
+            .translate(fromCenter(options.icon, reveal_angle))
+            .render()
+
         reveal_icon.datum()
           .transform
-          .translate(fromCenter(options.icon, reveal_angle))
+          // .translate(fromCenter(options.icon, reveal_angle))
           .rotate(arc2deg(reveal_angle))
           .scale({
             x: .5,
@@ -344,7 +349,7 @@ var clone_node = function(node, parent) {
           })
           .animate({
             'opacity': '1',
-            duration: 50
+            duration: 500
           })
 
         inner.wheel
@@ -354,10 +359,6 @@ var clone_node = function(node, parent) {
 
         hide_icon.datum()
           .transform
-          .translate({
-            x: 0,
-            y: 0
-          })
           .rotate(0)
           .scale({
             x: .5,
@@ -367,6 +368,13 @@ var clone_node = function(node, parent) {
             'opacity': '0',
             duration: 500
           })
+
+          // .translate({
+          //   x: 0,
+          //   y: 0
+          // })
+
+
 
 
         return grow_icon;
@@ -433,9 +441,9 @@ var clone_node = function(node, parent) {
 
               i <= 1 ? visible_icons.push(icon) : visible_icons.unshift(icon)
 
-              icon.attr({
-                'opacity': '1'
-              })
+              // icon.attr({
+              //   'opacity': '1'
+              // })
 
               var pos = i <= 1 ? i : spots - 1
               var angle = interval.radians * pos, // + (interval / 2),
@@ -463,7 +471,9 @@ var clone_node = function(node, parent) {
                   }
                   return values
                 })(d, i))
-                .animate()
+                .render()
+                
+                d.transform.animate({opacity:1})
 
             } else {
 

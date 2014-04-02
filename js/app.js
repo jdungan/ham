@@ -145,8 +145,6 @@ $("#dialer").on("pagecreate", function() {
         // patch for nesting
         data.elements = data.scores;
         
-        // svg.levels.push(data)
-        
         svg.wheels.unshift(add_wheel())
         
         svg.wheels[0].data(data.elements);
