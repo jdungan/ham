@@ -119,6 +119,23 @@ $("#dialer").on("pagecreate", function() {
     turn_wheel(-1)
   })
 
+  $( "#canvas" ).on( "info_clicked", function( event ) {
+    $.mobile.changePage( "#locale", {
+      changeHash: false
+    });
+  })
+
+  $( "#canvas" ).on( "info_clicked", function( event ) {
+    $.mobile.changePage( "#locale", {
+      changeHash: false
+    });
+  })
+
+  $( "i.home_button" ).on( 'click', function( event ) {
+    $.mobile.changePage( "#dialer", {
+      changeHash: false
+    });
+  })
 
   // wait for the api to be ready (which means waiting for position)
   sgh.ready.done(function() {

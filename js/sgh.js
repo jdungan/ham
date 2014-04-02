@@ -560,11 +560,14 @@ var clone_node = function(node, parent) {
             })
             .text(fa_translate('info-circle'))
             
+            
+            inner.info.on('click',function () {
+              $( "#canvas" ).trigger('info_clicked')
+            });
               
             inner.info.transform = new Transform(inner.info)
             
             inner.info.transform.scale({x:.5,y:.5}).render()
-
 
           inner.card.transform = new Transform(inner.card)
                     
