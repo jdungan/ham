@@ -221,6 +221,7 @@ var clone_node = function(node, parent) {
       if (degree != rotation.value) {
         rotation.value = Math.round((degree % 360 + (degree >= 0 ? 0 : 360)))
       }
+      
       return rotation.value
     }
 
@@ -284,7 +285,7 @@ var clone_node = function(node, parent) {
       element = element || {},
       visible_icons = [],
       hidden_icons = [],
-      spots = 15,
+      spots = 9,
       interval = {
         radians: (2 * Math.PI / spots),
         degrees: (360 / spots)
@@ -323,7 +324,9 @@ var clone_node = function(node, parent) {
             x: .5,
             y: .5
           })
-          .animate()
+          .animate({
+            'opacity': '.5',
+          })
 
         grow_icon.datum()
           .transform
@@ -331,13 +334,14 @@ var clone_node = function(node, parent) {
             x: 1.5,
             y: 1.5
           })
-          .animate()
+          .animate({
+            'opacity': '1',
+          })
 
-
-          reveal_icon.datum()
-            .transform
-            .translate(fromCenter(options.icon, reveal_angle))
-            .render()
+        reveal_icon.datum()
+          .transform
+          .translate(fromCenter(options.icon, reveal_angle))
+          .render()
 
         reveal_icon.datum()
           .transform
@@ -348,8 +352,7 @@ var clone_node = function(node, parent) {
             y: .5
           })
           .animate({
-            'opacity': '1',
-            duration: 500
+            'opacity': '0.5'
           })
 
         inner.wheel
@@ -365,8 +368,7 @@ var clone_node = function(node, parent) {
             y: .5
           })
           .animate({
-            'opacity': '0',
-            duration: 500
+            'opacity': '0'
           })
 
           // .translate({
@@ -441,9 +443,6 @@ var clone_node = function(node, parent) {
 
               i <= 1 ? visible_icons.push(icon) : visible_icons.unshift(icon)
 
-              // icon.attr({
-              //   'opacity': '1'
-              // })
 
               var pos = i <= 1 ? i : spots - 1
               var angle = interval.radians * pos, // + (interval / 2),
@@ -473,7 +472,7 @@ var clone_node = function(node, parent) {
                 })(d, i))
                 .render()
                 
-                d.transform.animate({opacity:1})
+                d.transform.animate({opacity:(i===0?1:0.5)})
 
             } else {
 
