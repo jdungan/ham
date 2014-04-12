@@ -587,7 +587,111 @@ var clone_node = function(node, parent) {
     return inner
   }
 
+  function GradeScale(element) {
+    GradeScale.element = element || {};
+    var options = options || {
+      bar:{
+        width:100,
+        height:2,        
+      },
+      icon_types: ['home', 'facebook', 'github', 'twitter', 'bell', 'camera']
+      
+    }
+    var scale = d3.scale.linear()
+      .range([-options.bar.width/2+5,options.bar.width/2-5]);
+    
+    var update = function (d) {
 
+      scale.domain([
+        //MIN
+        d.reduce(function(a, b) {
+          return a < b.score ? a : b.score
+        },d[0].score), 
+        //MAX        
+        d.reduce(function(a, b) {
+          return a > b.score ? a : b.score
+        },d[0].score)         
+      ])
+      
+      // inner.bar.selectAll('text.fa-icon').remove()
+      
+      var icons = inner.bar.selectAll('text.fa-icon')
+        .data(d)
+        
+      icons.enter()
+        .append('text')
+        .attr({
+          'class': 'fa-icon dont_select',
+          'font-family': 'FontAwesome',
+          'font-size': '5px',
+          'text-anchor': 'middle',
+          'dominant-baseline': 'central',
+          'fill': 'grey'
+          
+        })
+        
+        icons.transition()
+        .attr({
+          x: function (d,i) {
+            return scale(d.score)
+          } ,
+          y:5          
+        })
+        .text(function(d, i) {
+          return fa_translate(options.icon_types[i]);
+        })
+        .ease('elastic')
+        .duration(1000)
+        
+        icons.exit().remove()
+            
+    
+    }
+    
+    var inner = function () {
+      
+      if (!inner.bar) {
+        inner.bar = element.append('g')
+        
+        inner.bar.append('rect')
+        .attr({
+          x: -(options.bar.width/2),
+          y: 0,
+          width: options.bar.width,
+          height: options.bar.height,
+          fill: 'silver'
+        })
+        
+        // inner.bar.append('rect')
+        // .attr({
+        //   x: 0,
+        //   y: 0,
+        //   width: 1,
+        //   height: 5,
+        //   fill: 'grey'
+        // })
+        // 
+        // inner.bar.append('text')
+        // .attr({
+        //   x: 0,
+        //   y: -5,
+        //   'text-anchor': 'middle',
+        //   'dominant-baseline': 'central',
+        //   'font-size': '5px',
+        // })
+        // .text('AVG')
+      }
+              
+      inner.bar.transform = new Transform(inner.bar)
+
+      inner.bar.data = update;
+      
+      
+      return inner.bar
+    }
+    return inner
+  }
+  
   //font awesome dictionary object
 var fa_ucode = {
   glass: "f000",

@@ -8,16 +8,22 @@ $("#dialer").on("pagecreate", function() {
     .attr('height', window.innerHeight*.8)
     svg.wheels=[];
 
+    var update_grades = function (d) {
+      if (d.elements){
+        grades.data(d.elements)
+      } 
+      
+    }
 
     var add_card = function(){
       var card = new ScoreCard(svg)
       card().transform.translate({
-        x: window.innerWidth / 2,
-        y: window.innerHeight * 0.1 
+        x: window.innerWidth/2,
+        y: window.innerHeight * 0.05 
       })
       .scale({
-        x: 4,
-        y: 4
+        x: 3,
+        y: 3
       })
       .render()
     return card()  
@@ -25,6 +31,25 @@ $("#dialer").on("pagecreate", function() {
 
     var score = add_card();
        
+    var add_gradebar = function () {
+      
+      var bar = new GradeScale(svg)
+
+      bar().transform.translate({
+        x: window.innerWidth/2,
+        y: window.innerHeight * 0.3 
+      })
+      .scale({
+        x: 3,
+        y: 3
+      })
+      .render()
+      
+      return bar()
+    }
+  
+    var grades = add_gradebar()
+    
   var add_wheel = function(){
     var wheel = new Wheel(svg);
     wheel().transform
@@ -57,10 +82,13 @@ $("#dialer").on("pagecreate", function() {
         v.transform.scale(scale).animate()
       })
 
-                
+      var d = svg.wheels[0].focus().datum()
+      
+        update_grades(d)
+      
         $('#title').children().last().remove();
         
-        score.setScore(svg.wheels[0].focus())
+        score.setScore(d)
 
       }
     
@@ -82,7 +110,11 @@ $("#dialer").on("pagecreate", function() {
         v.transform.scale(scale).animate()
       })
       
+      
+      
       svg.wheels.unshift(add_wheel())
+      
+      update_grades(d)
       
       svg.wheels[0].data(d.elements);
           
@@ -101,6 +133,8 @@ $("#dialer").on("pagecreate", function() {
   function turn_wheel(direction){
 
     var new_focus = svg.wheels[0].turn(direction)
+
+    update_grades(new_focus.datum())      
     
     $('#title').children().last().text(new_focus.datum().label)
     
@@ -119,11 +153,6 @@ $("#dialer").on("pagecreate", function() {
     turn_wheel(-1)
   })
 
-  $( "#canvas" ).on( "info_clicked", function( event ) {
-    $.mobile.changePage( "#locale", {
-      changeHash: false
-    });
-  })
 
   $( "#canvas" ).on( "info_clicked", function( event ) {
     $.mobile.changePage( "#locale", {
@@ -144,6 +173,8 @@ $("#dialer").on("pagecreate", function() {
         
         // patch for nesting
         data.elements = data.scores;
+        
+        update_grades(data.elements[0])
         
         svg.wheels.unshift(add_wheel())
         
