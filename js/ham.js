@@ -303,28 +303,54 @@ Icon.prototype.fa_type =
 
 function Card(element) {
 
-  var drag = d3.behavior.drag().on('drag',function (d) {
-    var t = this.__transform__.translate(),
-    newY= t.y+d3.event.dy
+  var drag = d3.behavior.drag()
+  
+  .on('drag',function (d) {
+    var t = d.transform.translate(),
+    newY= t.y + d3.event.dy,
+    lower_limit = d.h *(1- (d.level*.05))
 
-    if (newY >= 0 && newY <= 600){
-      this.__transform__.translate({
+    if (newY >= 0 && newY <= lower_limit && d.level<=2){
+      d.transform.translate({
         x: t.x,
         y: newY
       }).render()
     }
      
   })
+ .on('dragend', function(d) {
+
+    var lower_limit = d.h * (1 - (d.level * .05)),
+    newY = d.transform.translate().y >= (d.h/3) ? lower_limit : 0;
+
+    d.transform
+      .translate({
+        x: d.transform.translate().x,
+        y: newY
+      })
+      .animate({
+        ease: 'elastic'
+      })
+
+
+
+  })
   
+  //arrow-circle-o-up
   if (element) {
 
-    var c = element.insert('g', ":first-child"),
-    h=element.attr('height'),
-    w=element.attr('width');
-        
-    c.node().__transform__ = new Transform(c)
+    var c = this.e = element.insert('g', ":first-child"),
+    h = element.attr('height'),
+    w = element.attr('width');
+
     
-    c.call(drag)
+    c.datum({
+      h : h,
+      w : w,
+      transform: new Transform(c)
+    })
+    
+    c.call(drag)    
 
     c.append('rect').attr({
         fill: 'silver',
@@ -335,8 +361,6 @@ function Card(element) {
     this.title_text = c.append('g')
       .append("foreignObject")
         .attr({
-        x:10,
-        y:10,
         height: h * .05,
         width: w -20
         })
@@ -347,7 +371,7 @@ function Card(element) {
       this.title_text.text('...')
 
       this.icon = new Icon(c).fa_type('arrow-circle-o-down')
-      this.icon.transform.translate({x:w*.9,y:30}).render()
+      this.icon.transform.translate({x:w*.9,y:20}).render()
       
       this.strip = new Strip(c)
       this.strip.transform.translate({x:0,y:h*.1}).render()
@@ -358,6 +382,11 @@ function Card(element) {
 
 Card.prototype.title = function (text) {
   this.title_text.text(text)
+}
+
+Card.prototype.level = function (level) {
+  level= level || 0;
+  this.e.datum().level = level
 }
 
 
@@ -375,6 +404,25 @@ function Strip(element) {
   }
 }
 
+
+Strip.prototype.fill = function (fill) {
+  this.back.attr('fill',fill)
+}
+
+function Graph(element) {
+  if (element) {
+    var s = this.strip = element.append('g')
+    this.back = s.insert('rect')
+      .attr({
+        height: 300,
+        width: 600,
+        fill: 'white'
+      })
+      
+      
+    this.transform = new Transform(this.back)
+  }
+}
 
 
 
