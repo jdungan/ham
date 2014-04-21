@@ -9,23 +9,11 @@ $("#viewer").on("pagecreate", function() {
   
   var svg = d3.select('#canvas').attr(viewport);
     
-  var first = new Card(svg)
+  // var first = new Card(svg)  
+  // first.title("healtharound.me")
+  // first.level( 1)
+  // first.strip.fill('blue')  
 
-  first.title("first")
-  first.level( 1)
-  first.strip.fill('green')  
-
-  var second = new Card(svg)
-
-  second.title("second")
-  second.level(2)
-  second.strip.fill('yellow')  
-    
-  var third = new Card(svg)
-
-  third.title("third")
-  third.level(3)
-  third.strip.fill('blue')  
 
   // $( "#canvas" ).on( "swipeleft", function( event ) {
   //   console.log('left')
@@ -58,6 +46,14 @@ $("#viewer").on("pagecreate", function() {
         
         // patch for nesting
         data.elements = data.scores;
+        
+        var s = new  Card(svg)
+        s.title("healtharound.me too")
+        s.level( 2)
+        s.strip.fill('brown')
+        s.strip.update(data.elements)  
+        
+        
 
       })
       .error(function(d) {

@@ -182,177 +182,176 @@ var clone_node = function(node, parent) {
 }
 //tranform function to be added to a d3 objects
 
-  function Transform(element) {
-    var order = ['translate', 'scale', 'rotate'],
-      inner = {
-        translate: {
-          value: {
-            x: 0,
-            y: 0
-          },
-          string: xyString
+function Transform(element) {
+  var order = ['translate', 'scale', 'rotate'],
+    inner = {
+      translate: {
+        value: {
+          x: 0,
+          y: 0
         },
-        scale: {
-          value: {
-            x: 1,
-            y: 1
-          },
-          string: xyString
+        string: xyString
+      },
+      scale: {
+        value: {
+          x: 1,
+          y: 1
         },
-        rotate: {
-          value: rotation,
-          string: function() {
-            return rotation()
-          }
+        string: xyString
+      },
+      rotate: {
+        value: rotation,
+        string: function() {
+          return rotation()
         }
-      };
-
-
-    function xyString() {
-      return this.value.x === this.value.y ? this.value.x : this.value.x + ',' + this.value.y
+      }
     };
 
-    function rotation(degree) {
 
-      if (degree === undefined) {
-        return rotation.value || 0;
-      }
+  function xyString() {
+    return this.value.x === this.value.y ? this.value.x : this.value.x + ',' + this.value.y
+  };
 
-      if (degree != rotation.value) {
-        rotation.value = Math.round((degree % 360 + (degree >= 0 ? 0 : 360)))
-      }
+  function rotation(degree) {
 
-      return rotation.value
+    if (degree === undefined) {
+      return rotation.value || 0;
     }
 
-
-    // add getters and setters for transform types in the order array
-    order.forEach(function(v) {
-      this[v] = function(d) {
-
-        var isFunction = (typeof inner[v].value === "function")
-
-        if (d == undefined) {
-          return isFunction ? inner[v].value() : inner[v].value
-        };
-
-        var new_value = (typeof d === 'function') ? d(element) : d
-
-        isFunction ? inner[v].value(new_value) : inner[v].value = new_value
-
-        return this;
-
-      }
-    }, this);
-
-    this.render = function() {
-      element.attr('transform', this.toString());
+    if (degree != rotation.value) {
+      rotation.value = Math.round((degree % 360 + (degree >= 0 ? 0 : 360)))
     }
 
-    this.animate = function(options) {
-      var options = options || {},
-        duration = options.duration || 500,
-        ease = options.ease || '',
-        opacity = options.opacity || '1';
-
-      return element.transition()
-        .duration(duration)
-        .ease(d3.ease(ease))
-        .attr('transform', this.toString())
-        .attr('opacity', opacity)
-    }
-
-    this.toString = function() {
-      return order.map(
-        function(v) {
-          return v + '(' + inner[v].string() + ')'
-        },
-        this).join(' ');
-    }
-
+    return rotation.value
   }
 
 
-  // d3 based controls
+  // add getters and setters for transform types in the order array
+  order.forEach(function(v) {
+    this[v] = function(d) {
 
-  function Icon(element) {
+      var isFunction = (typeof inner[v].value === "function")
 
-    if (element) {
-      this.icon = element.append('text')
-        .attr({
-          'class': 'fa-icon dont_select',
-          'font-family': 'FontAwesome',
-          'font-size': '20px',
-          'text-anchor': 'middle',
-          'dominant-baseline': 'central',
-          'opacity': '1'
-        })
+      if (d == undefined) {
+        return isFunction ? inner[v].value() : inner[v].value
+      };
 
-      this.transform = new Transform(this.icon)
+      var new_value = (typeof d === 'function') ? d(element) : d
+
+      isFunction ? inner[v].value(new_value) : inner[v].value = new_value
+
+      return this;
 
     }
-
+  }, this);
+  
+  this.render = function() {
+    element.attr('transform', this.toString());
   }
 
+  this.animate = function(options) {
+    var options = options || {},
+      duration = options.duration || 500,
+      ease = options.ease || '',
+      opacity = options.opacity || '1';
+
+    return element.transition()
+      .duration(duration)
+      .ease(d3.ease(ease))
+      .attr('transform', this.toString())
+      .attr('opacity', opacity)
+  }
+
+  this.toString = function() {
+    return order.map(
+      function(v) {
+        return v + '(' + inner[v].string() + ')'
+      },
+      this).join(' ');
+  }
+
+  
+}
+
+
+// d3 based controls
+
+function Control(d3_select){
+  this.element = d3_select || [];    
+  this.transform = new Transform(d3_select);
+  this.element.node().__transform__ =  this.transform;
+}
+
+
+function Icon(parent) {
+  if (parent) {
+    this.icon = new Control(parent.append('text'))
+    this.icon.element
+      .attr({
+        'class': 'fa-icon dont_select',
+        'font-family': 'FontAwesome',
+        'font-size': '20px',
+        'text-anchor': 'middle',
+        'dominant-baseline': 'central',
+        'opacity': '1'
+      })
+    this.transform = this.icon.transform
+  }
+}
+  
 Icon.prototype.fa_type =
   function(name) {
-    this.icon.text(String.fromCharCode(parseInt(fa_ucode[name], 16)))
+    this.icon.element.text(String.fromCharCode(parseInt(fa_ucode[name], 16)))
     return this;
 }
 
 
-function Card(element) {
+function Card(parent) {
 
   var drag = d3.behavior.drag()
   
   .on('drag',function (d) {
-    var t = d.transform.translate(),
-    newY= t.y + d3.event.dy,
+    var transform = this.__transform__,
+    newY= transform.translate().y + d3.event.dy,
     lower_limit = d.h *(1- (d.level*.05))
 
     if (newY >= 0 && newY <= lower_limit && d.level<=2){
-      d.transform.translate({
-        x: t.x,
+      transform.translate({
+        x: transform.translate().x,
         y: newY
       }).render()
     }
      
   })
- .on('dragend', function(d) {
-
+  .on('dragend', function(d) {
     var lower_limit = d.h * (1 - (d.level * .05)),
-    newY = d.transform.translate().y >= (d.h/3) ? lower_limit : 0;
-
-    d.transform
+    transform = this.__transform__,
+    newY = transform.translate().y >= (d.h/3) ? lower_limit : 0;
+    transform
       .translate({
-        x: d.transform.translate().x,
+        x: transform.translate().x,
         y: newY
       })
       .animate({
         ease: 'elastic'
       })
-
-
-
   })
   
   //arrow-circle-o-up
-  if (element) {
+  if (parent) {
 
-    var c = this.e = element.insert('g', ":first-child"),
-    h = element.attr('height'),
-    w = element.attr('width');
-
+    this.container = new Control(parent.insert('g', ":first-child"));
     
-    c.datum({
-      h : h,
-      w : w,
-      transform: new Transform(c)
-    })
+    var c=this.container.element,
+        h = parent.attr('height'),
+        w = parent.attr('width');
+    
+    c.datum({h : h, w : w});
     
     c.call(drag)    
 
     c.append('rect').attr({
+      class: 'card',
         fill: 'silver',
         height: h,
         width: w
@@ -370,13 +369,15 @@ function Card(element) {
         
       this.title_text.text('...')
 
-      this.icon = new Icon(c).fa_type('arrow-circle-o-down')
-      this.icon.transform.translate({x:w*.9,y:20}).render()
       
       this.strip = new Strip(c)
       this.strip.transform.translate({x:0,y:h*.1}).render()
 
+      this.icon = new Icon(c).fa_type('arrow-circle-o-down')
+      this.icon.transform.translate({x:w*.9,y:20}).render()
+
   }
+  
 
 }
 
@@ -385,42 +386,62 @@ Card.prototype.title = function (text) {
 }
 
 Card.prototype.level = function (level) {
-  level= level || 0;
-  this.e.datum().level = level
+  var d =   this.container.element.datum() || undefined
+
+  d 
+    ? d.level = level
+    : d.datum({level : level})
 }
 
 
 
-function Strip(element) {
-  if (element) {
-    var s = this.strip = element.append('g')
-    this.back = s.insert('rect')
+function Strip(parent) {
+  if (parent) {
+    this.strip = new Control(parent.append('g').attr('class','strip'))
+    this.background = this.strip.element.insert('rect')
       .attr({
         height: 300,
         width: 600,
         fill: 'white'
       })
-    this.transform = new Transform(this.back)
+   this.transform = this.strip.transform; 
   }
 }
 
 
 Strip.prototype.fill = function (fill) {
-  this.back.attr('fill',fill)
+  this.background.attr('fill',fill)
 }
 
-function Graph(element) {
-  if (element) {
-    var s = this.strip = element.append('g')
-    this.back = s.insert('rect')
+Strip.prototype.update = function (d) {
+  
+  var parent =this.strip.element.node();
+  var graphs = d3.select(parent).selectAll('g.graph').data(d);
+  
+  graphs.enter()
+  .append('g')
+  .attr('class','graph')
+  .each(function (d,i) {
+    var graph = new Graph(d3.select(this));
+    graph.transform
+      .translate({x:i*60,y:10})
+      .render()
+  })
+  
+  
+}
+
+function Graph(parent) {
+  if (parent) {
+    this.graph = new Control(parent)
+
+    this.background = this.graph.element.append('rect')
       .attr({
-        height: 300,
-        width: 600,
-        fill: 'white'
+        height: 50,
+        width: 50,
+        fill: 'floralwhite'
       })
-      
-      
-    this.transform = new Transform(this.back)
+    this.transform = this.graph.transform
   }
 }
 
