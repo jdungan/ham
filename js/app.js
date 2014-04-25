@@ -9,6 +9,13 @@ $("#viewer").on("pagecreate", function() {
   
   var svg = d3.select('#canvas').attr(viewport);
     
+  var cross = new Viewfinder(svg)
+  
+  cross.transform.scale({x:2,y:2})
+  
+  cross.position({x:viewport.width/2,y:viewport.height/2})  
+  
+    
   // var first = new Card(svg)  
   // first.title("healtharound.me")
   // first.level( 1)
@@ -50,7 +57,6 @@ $("#viewer").on("pagecreate", function() {
         var s = new  Card(svg)
         s.title("healtharound.me too")
         s.level( 2)
-        s.strip.fill('brown')
         s.strip.update(data.elements)  
         
         

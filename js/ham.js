@@ -229,19 +229,13 @@ function Transform(element) {
   // add getters and setters for transform types in the order array
   order.forEach(function(v) {
     this[v] = function(d) {
-
       var isFunction = (typeof inner[v].value === "function")
-
       if (d == undefined) {
         return isFunction ? inner[v].value() : inner[v].value
       };
-
       var new_value = (typeof d === 'function') ? d(element) : d
-
       isFunction ? inner[v].value(new_value) : inner[v].value = new_value
-
       return this;
-
     }
   }, this);
   
@@ -308,36 +302,57 @@ Icon.prototype.fa_type =
 
 function Card(parent) {
 
-  var drag = d3.behavior.drag()
+  // var drag = d3.behavior.drag()  
+  // .on('drag',function (d) {
+  //   var transform = this.__transform__,
+  //   newY= transform.translate().y + d3.event.dy,
+  //   lower_limit = d.h *(1- (d.level*.05))
+  // 
+  //   if (newY >= 0 && newY <= lower_limit && d.level<=2){
+  //     transform.translate({
+  //       x: transform.translate().x,
+  //       y: newY
+  //     }).render()
+  //   }
+  //    
+  // })
+  // .on('dragend', function(d) {
+  //   var lower_limit = d.h * (1 - (d.level * .05)),
+  //   transform = this.__transform__,
+  //   newY = transform.translate().y >= (d.h/3) ? lower_limit : 0;
+  //   transform
+  //     .translate({
+  //       x: transform.translate().x,
+  //       y: newY
+  //     })
+  //     .animate({
+  //       ease: 'elastic'
+  //     })
+  // })
   
-  .on('drag',function (d) {
-    var transform = this.__transform__,
-    newY= transform.translate().y + d3.event.dy,
-    lower_limit = d.h *(1- (d.level*.05))
-
-    if (newY >= 0 && newY <= lower_limit && d.level<=2){
-      transform.translate({
-        x: transform.translate().x,
-        y: newY
-      }).render()
-    }
-     
-  })
-  .on('dragend', function(d) {
+  
+  var click = function (d,i) {
     var lower_limit = d.h * (1 - (d.level * .05)),
     transform = this.__transform__,
-    newY = transform.translate().y >= (d.h/3) ? lower_limit : 0;
+    newY = transform.translate().y === 0 ? lower_limit : 0;
+    
     transform
       .translate({
         x: transform.translate().x,
         y: newY
       })
       .animate({
-        ease: 'elastic'
+        ease: 'elastic',
+        duration:600
       })
-  })
+    
+  }
   
   //arrow-circle-o-up
+  
+  
+  
+  
   if (parent) {
 
     this.container = new Control(parent.insert('g', ":first-child"));
@@ -346,12 +361,10 @@ function Card(parent) {
         h = parent.attr('height'),
         w = parent.attr('width');
     
-    c.datum({h : h, w : w});
-    
-    c.call(drag)    
+    c.datum({h : h, w : w});   
 
     c.append('rect').attr({
-      class: 'card',
+        class: 'card',
         fill: 'silver',
         height: h,
         width: w
@@ -361,16 +374,20 @@ function Card(parent) {
       .append("foreignObject")
         .attr({
         height: h * .05,
-        width: w -20
+        width:  w - 20
         })
       .append("xhtml:body")
         .style("font", "24px 'Helvetica'")      
       .append("div")
         
-      this.title_text.text('...')
 
-      
-      this.strip = new Strip(c)
+
+      var title_node = this.title_text.node()
+      title_node.__transform__ = this.container.transform      
+
+      this.title_text.on('click',click) 
+
+      this.strip = new Strip(this)
       this.strip.transform.translate({x:0,y:h*.1}).render()
 
       this.icon = new Icon(c).fa_type('arrow-circle-o-down')
@@ -382,7 +399,9 @@ function Card(parent) {
 }
 
 Card.prototype.title = function (text) {
-  this.title_text.text(text)
+  if (this.title_text!=text){
+      this.title_text.text(text)
+    }
 }
 
 Card.prototype.level = function (level) {
@@ -393,19 +412,62 @@ Card.prototype.level = function (level) {
     : d.datum({level : level})
 }
 
-
-
 function Strip(parent) {
+    
+  var tuner =  this.tuner = d3.scale.quantize()
+    .domain([0,1])
+    .range([])
+    // .nice(50)
+  
+  this.parent = function () {
+    return parent;
+  }
+
+      
+  var drag = d3.behavior.drag()
+  .on('drag',function (d) {
+    var transform = this.__transform__,
+    newX= transform.translate().x + d3.event.dx,
+    upper_limit = this.getBBox().width-50;
+
+    if (newX <= 100 && newX >= -upper_limit){
+      transform.translate({
+        y: transform.translate().y,
+        x: newX
+      }).render()
+      
+      $(this).trigger('tune',-newX)
+    }     
+  })
+  
   if (parent) {
-    this.strip = new Control(parent.append('g').attr('class','strip'))
+    this.strip = new Control(parent.container.element.append('g').attr('class','strip'))
+    
+    this.strip
+      .element
+      .call(drag);
+
+        
+    $(this.strip.element.node()).on('tune',function (e,newX) {      
+      var d=tuner(newX+(window.innerWidth/2))
+      
+      parent.title ((d===null) ? '' : d.label)
+  
+    })
+
     this.background = this.strip.element.insert('rect')
       .attr({
-        height: 300,
-        width: 600,
+        height: 500,
+        width: 50,
         fill: 'white'
       })
+      
    this.transform = this.strip.transform; 
   }
+}
+
+Strip.prototype.width = function () {
+  return this.background.attr('width')
 }
 
 
@@ -418,17 +480,43 @@ Strip.prototype.update = function (d) {
   var parent =this.strip.element.node();
   var graphs = d3.select(parent).selectAll('g.graph').data(d);
   
+  var tuner = this.tuner;
+  
+  var startX=50;
+  
   graphs.enter()
   .append('g')
   .attr('class','graph')
   .each(function (d,i) {
     var graph = new Graph(d3.select(this));
+      
+    tuner.range().push(null)
+    tuner.range(tuner.range().concat(d.elements))
+    
+    graph.update(d)
+    
     graph.transform
-      .translate({x:i*60,y:10})
+      .translate({x: startX ,y:'50'})
       .render()
+      
+    startX += 50 + d.elements.length*50
+
   })
+
+  //count bars
   
+  var strip_count = d.reduce(function(a, b) {
+    return a + b.elements.length
+  }, 0)
+
+  strip_count += d.length + 1
   
+  var strip_width = strip_count*50
+  
+  this.tuner.domain([0,strip_width])
+  
+  this.background.attr('width',strip_width)
+
 }
 
 function Graph(parent) {
@@ -437,15 +525,67 @@ function Graph(parent) {
 
     this.background = this.graph.element.append('rect')
       .attr({
-        height: 50,
-        width: 50,
+        height: 350,
+        width: 0,
         fill: 'floralwhite'
       })
-    this.transform = this.graph.transform
+
+      this.transform = this.graph.transform
+      
   }
 }
 
+Graph.prototype.height = function () {
+  return this.background.attr('height')
+}
 
+Graph.prototype.update = function (d) {
+  
+  var parent =this.graph.element.node(),
+      bars = d3.select(parent).selectAll('rect.bar').data(d.elements),
+      scores = d3.scale.quantize()
+        .domain([0, 1])
+        .range(['red', 'yellow', 'green']),
+      h=this.height()
+
+  
+  bars.enter()
+    .append('rect')
+    .attr({
+      'class':'bar',
+      'height': function (d,i) {
+        return d.score * h
+      },
+      width:50,
+      x: function (d,i) {
+        return i*50
+      },
+      y: function (d,i) {
+        return h-(h * d.score)
+      },
+      fill: function (d,i) {
+        return scores(d.score)
+      },
+      'stroke':'black'
+      
+    })
+    
+  this.background.attr('width',d.elements.length*50)  
+        
+}
+
+function Viewfinder(parent) {
+  if (parent) {
+    this.icon = new Icon(parent).fa_type('crosshairs')
+    this.transform = this.icon.transform;
+  }
+}
+
+Viewfinder.prototype.position = function (pos){
+  this.icon.transform
+  .translate({x:pos.x,y:pos.y})
+  .animate()
+}
 
 //font awesome dictionary object
 var fa_ucode = {
