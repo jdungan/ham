@@ -209,7 +209,7 @@ function Transform(element) {
 
 
   function xyString() {
-    return this.value.x === this.value.y ? this.value.x : this.value.x + ',' + this.value.y
+    return  this.value.x + ',' + this.value.y
   };
 
   function rotation(degree) {
@@ -230,11 +230,17 @@ function Transform(element) {
   order.forEach(function(v) {
     this[v] = function(d) {
       var isFunction = (typeof inner[v].value === "function")
+      
       if (d == undefined) {
         return isFunction ? inner[v].value() : inner[v].value
       };
-      var new_value = (typeof d === 'function') ? d(element) : d
+      
+      var new_value = (typeof d === 'function') 
+        ? d(element) 
+        : d
+      
       isFunction ? inner[v].value(new_value) : inner[v].value = new_value
+      
       return this;
     }
   }, this);
@@ -301,40 +307,18 @@ Icon.prototype.fa_type =
 
 
 function Card(parent) {
-
-  // var drag = d3.behavior.drag()  
-  // .on('drag',function (d) {
-  //   var transform = this.__transform__,
-  //   newY= transform.translate().y + d3.event.dy,
-  //   lower_limit = d.h *(1- (d.level*.05))
-  // 
-  //   if (newY >= 0 && newY <= lower_limit && d.level<=2){
-  //     transform.translate({
-  //       x: transform.translate().x,
-  //       y: newY
-  //     }).render()
-  //   }
-  //    
-  // })
-  // .on('dragend', function(d) {
-  //   var lower_limit = d.h * (1 - (d.level * .05)),
-  //   transform = this.__transform__,
-  //   newY = transform.translate().y >= (d.h/3) ? lower_limit : 0;
-  //   transform
-  //     .translate({
-  //       x: transform.translate().x,
-  //       y: newY
-  //     })
-  //     .animate({
-  //       ease: 'elastic'
-  //     })
-  // })
-  
   
   var click = function (d,i) {
-    var lower_limit = d.h * (1 - (d.level * .05)),
+    var lower_limit = window.innerHeight  * .95,
     transform = this.__transform__,
     newY = transform.translate().y === 0 ? lower_limit : 0;
+
+    var d = d3.select(this).datum()
+        
+    var c = new  Card(d3.select('#canvas'))
+    // c.title(d.label)
+    // c.level( 2)
+    c.strip.update([d])  
     
     transform
       .translate({
@@ -343,15 +327,12 @@ function Card(parent) {
       })
       .animate({
         ease: 'elastic',
-        duration:600
+        duration:800
       })
     
   }
   
   //arrow-circle-o-up
-  
-  
-  
   
   if (parent) {
 
@@ -361,7 +342,7 @@ function Card(parent) {
         h = parent.attr('height'),
         w = parent.attr('width');
     
-    c.datum({h : h, w : w});   
+    // c.datum({h : h, w : w});   
 
     c.append('rect').attr({
         class: 'card',
@@ -373,29 +354,48 @@ function Card(parent) {
     this.title_text = c.append('g')
       .append("foreignObject")
         .attr({
-        height: h * .05,
-        width:  w - 20
+        height: 50,
+        width:  w 
         })
       .append("xhtml:body")
         .style("font", "24px 'Helvetica'")      
       .append("div")
         
-
+      this.title_text.on('mousedown',click) 
 
       var title_node = this.title_text.node()
       title_node.__transform__ = this.container.transform      
 
-      this.title_text.on('click',click) 
 
       this.strip = new Strip(this)
-      this.strip.transform.translate({x:0,y:h*.1}).render()
+      this.strip.transform.translate({x:50,y:50}).render()
 
-      this.icon = new Icon(c).fa_type('arrow-circle-o-down')
-      this.icon.transform.translate({x:w*.9,y:20}).render()
+      this.icon = new Icon(c).fa_type('chevron-down')
+      this.icon.transform.translate({x:w/2,y:50}).render()
 
+
+      this.foot = c.append('g')
+      
+      this.foot.text = this.foot
+        .append('g')
+        .append("foreignObject")
+          .attr({
+            y:window.innerHeight - 50,
+            height: 50,
+            width:  w 
+          })
+        .append("xhtml:body")
+          .style("font", "24px 'Helvetica'")      
+        .append("div")
   }
   
 
+}
+
+Card.prototype.footer = function (text) {
+  if (this.foot.text!=text){
+      this.foot.text.text(text)
+    }
 }
 
 Card.prototype.title = function (text) {
@@ -404,12 +404,17 @@ Card.prototype.title = function (text) {
     }
 }
 
-Card.prototype.level = function (level) {
-  var d =   this.container.element.datum() || undefined
 
-  d 
-    ? d.level = level
-    : d.datum({level : level})
+Card.prototype.level = function (level) {  
+  return level ? (this.level=level) : this.level;
+}
+
+Card.prototype.update = function(data){
+  
+  this.title_text.data(data)
+  
+  this.strip.update(data)
+  
 }
 
 function Strip(parent) {
@@ -417,7 +422,6 @@ function Strip(parent) {
   var tuner =  this.tuner = d3.scale.quantize()
     .domain([0,1])
     .range([])
-    // .nice(50)
   
   this.parent = function () {
     return parent;
@@ -428,9 +432,11 @@ function Strip(parent) {
   .on('drag',function (d) {
     var transform = this.__transform__,
     newX= transform.translate().x + d3.event.dx,
-    upper_limit = this.getBBox().width-50;
+    right_limit = this.getBBox().width/2;
 
-    if (newX <= 100 && newX >= -upper_limit){
+    console.log ({newX:newX,'this':this,bbox:this.getBBox().width,right_limit:right_limit})
+
+    if (Math.abs(newX) <= right_limit){
       transform.translate({
         y: transform.translate().y,
         x: newX
@@ -441,6 +447,7 @@ function Strip(parent) {
   })
   
   if (parent) {
+    
     this.strip = new Control(parent.container.element.append('g').attr('class','strip'))
     
     this.strip
@@ -448,12 +455,8 @@ function Strip(parent) {
       .call(drag);
 
         
-    $(this.strip.element.node()).on('tune',function (e,newX) {      
-      var d=tuner(newX+(window.innerWidth/2))
-      
-      parent.title ((d===null) ? '' : d.label)
-  
-    })
+    $(this.strip.element.node()).on('tune',this.tune)
+
 
     this.background = this.strip.element.insert('rect')
       .attr({
@@ -464,7 +467,21 @@ function Strip(parent) {
       
    this.transform = this.strip.transform; 
   }
+  
 }
+
+
+Strip.prototype.tune =  function(e,newX){
+
+  
+  var d=this.tuner(newX+(window.innerWidth/2))
+        
+  parent.title ((d===null) ? '' : d.label)
+  
+  parent.title_text.datum(d)
+  
+}
+
 
 Strip.prototype.width = function () {
   return this.background.attr('width')
@@ -478,6 +495,7 @@ Strip.prototype.fill = function (fill) {
 Strip.prototype.update = function (d) {
   
   var parent =this.strip.element.node();
+  
   var graphs = d3.select(parent).selectAll('g.graph').data(d);
   
   var tuner = this.tuner;
@@ -491,7 +509,7 @@ Strip.prototype.update = function (d) {
     var graph = new Graph(d3.select(this));
       
     tuner.range().push(null)
-    tuner.range(tuner.range().concat(d.elements))
+    tuner.range(tuner.range().concat(d))
     
     graph.update(d)
     
@@ -499,14 +517,14 @@ Strip.prototype.update = function (d) {
       .translate({x: startX ,y:'50'})
       .render()
       
-    startX += 50 + d.elements.length*50
+    startX += 50 + d.length*50
 
   })
 
   //count bars
   
   var strip_count = d.reduce(function(a, b) {
-    return a + b.elements.length
+    return a + b.length
   }, 0)
 
   strip_count += d.length + 1
@@ -521,6 +539,7 @@ Strip.prototype.update = function (d) {
 
 function Graph(parent) {
   if (parent) {
+    
     this.graph = new Control(parent)
 
     this.background = this.graph.element.append('rect')
@@ -542,12 +561,11 @@ Graph.prototype.height = function () {
 Graph.prototype.update = function (d) {
   
   var parent =this.graph.element.node(),
-      bars = d3.select(parent).selectAll('rect.bar').data(d.elements),
+      bars = d3.select(parent).selectAll('rect.bar').data(d),
       scores = d3.scale.quantize()
         .domain([0, 1])
         .range(['red', 'yellow', 'green']),
       h=this.height()
-
   
   bars.enter()
     .append('rect')
@@ -570,7 +588,7 @@ Graph.prototype.update = function (d) {
       
     })
     
-  this.background.attr('width',d.elements.length*50)  
+  this.background.attr('width',d.length*50)  
         
 }
 
@@ -584,7 +602,7 @@ function Viewfinder(parent) {
 Viewfinder.prototype.position = function (pos){
   this.icon.transform
   .translate({x:pos.x,y:pos.y})
-  .animate()
+  .animate({ease:'poly'})
 }
 
 //font awesome dictionary object
