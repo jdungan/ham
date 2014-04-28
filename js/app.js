@@ -13,7 +13,7 @@ $("#viewer").on("pagecreate", function() {
   
   cross.transform.scale({x:3,y:3})
   
-  cross.position({x:175,y:viewport.height/2})  
+  cross.position({x:125,y:viewport.height/2})  
   
     
   // var first = new Card(svg)  
@@ -34,7 +34,6 @@ $("#viewer").on("pagecreate", function() {
         var s = new  Card(svg)
         s.title(data.elements[0].label)
         s.footer('healtharound.me')
-        debugger;
         s.update([data.elements])  
         
         

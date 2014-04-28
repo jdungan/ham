@@ -419,8 +419,8 @@ Card.prototype.update = function(data){
 
 function Strip(parent) {
     
-  var tuner =  this.tuner = d3.scale.quantize()
-    .domain([0,1])
+  var tuner =  this.tuner = d3.scale.quantile()
+    .domain([0])
     .range([])
   
   this.parent = function () {
@@ -436,13 +436,13 @@ function Strip(parent) {
 
     console.log ({newX:newX,'this':this,bbox:this.getBBox().width,right_limit:right_limit})
 
-    if (Math.abs(newX) <= right_limit){
+    if (-right_limit <= newX && newX <= 75 ){
       transform.translate({
         y: transform.translate().y,
         x: newX
       }).render()
       
-      $(this).trigger('tune',-newX)
+      $(this).trigger('tune',newX)
     }     
   })
   
@@ -453,9 +453,16 @@ function Strip(parent) {
     this.strip
       .element
       .call(drag);
-
         
-    $(this.strip.element.node()).on('tune',this.tune)
+    $(this.strip.element.node()).on('tune',function (e,newX) {
+
+      var d=this.tuner(newX+(window.innerWidth/2))
+        
+      parent.title ((d===null) ? '' : d.label)
+  
+      parent.title_text.datum(d)
+      
+    },this)
 
 
     this.background = this.strip.element.insert('rect')
@@ -472,7 +479,6 @@ function Strip(parent) {
 
 
 Strip.prototype.tune =  function(e,newX){
-
   
   var d=this.tuner(newX+(window.innerWidth/2))
         
@@ -507,11 +513,29 @@ Strip.prototype.update = function (d) {
   .attr('class','graph')
   .each(function (d,i) {
     var graph = new Graph(d3.select(this));
-      
-    tuner.range().push(null)
-    tuner.range(tuner.range().concat(d))
-    
+
     graph.update(d)
+    
+    tuner.range().push({})
+
+    d.forEach(function (v,i) {
+      var domain = tuner.domain(),
+      last = domain[domain.length-1]
+      domain.push(last+50)
+      tuner.domain(domain)
+      
+      var range = tuner.range()
+      range.push(v)
+      tuner.range(range)
+
+    })
+            
+    //uggly
+    var domain = tuner.domain(),
+    last = domain[domain.length-1]
+    domain.push(last+50)
+    tuner.domain(domain)
+    
     
     graph.transform
       .translate({x: startX ,y:'50'})
@@ -524,15 +548,15 @@ Strip.prototype.update = function (d) {
   //count bars
   
   var strip_count = d.reduce(function(a, b) {
+
+
     return a + b.length
   }, 0)
 
   strip_count += d.length + 1
   
   var strip_width = strip_count*50
-  
-  this.tuner.domain([0,strip_width])
-  
+    
   this.background.attr('width',strip_width)
 
 }
