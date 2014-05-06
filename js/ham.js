@@ -190,20 +190,23 @@ function Transform(element) {
           x: 0,
           y: 0
         },
-        string: xyString
+        string: xyString,
+        increment: xyIncrement
       },
       scale: {
         value: {
           x: 1,
           y: 1
         },
-        string: xyString
+        string: xyString,
+        increment: xyIncrement
       },
       rotate: {
         value: rotation,
         string: function() {
           return rotation()
-        }
+        },
+        increment:function(){return this;}
       }
     };
 
@@ -224,7 +227,16 @@ function Transform(element) {
 
     return rotation.value
   }
-
+  
+  function xyIncrement(transform){
+    var this_transform = transform;
+    
+    return function(obj){
+      if (obj.x||obj.x) { this().x += obj.x }
+      if (obj.y||obj.y) { this().y += obj.y }
+      return this_transform;
+    }
+  }
 
   // add getters and setters for transform types in the order array
   order.forEach(function(v) {
@@ -235,14 +247,15 @@ function Transform(element) {
         return isFunction ? inner[v].value() : inner[v].value
       };
       
-      var new_value = (typeof d === 'function') 
-        ? d(element) 
-        : d
+      var new_value = (typeof d === 'function') ? d(element) : d
       
       isFunction ? inner[v].value(new_value) : inner[v].value = new_value
       
       return this;
     }
+
+    this[v].incr = new inner[v].increment(this)
+    
   }, this);
   
   this.render = function() {
@@ -269,8 +282,7 @@ function Transform(element) {
       },
       this).join(' ');
   }
-
-  
+    
 }
 
 
@@ -282,6 +294,20 @@ function Control(d3_select){
   this.element.node().__transform__ =  this.transform;
 }
 
+Control.prototype.node = function(){
+  return this.element.node()
+}
+
+
+
+function Textbox(parent){
+  if (parent){
+    this.control = new Control(parent.append('g'))
+    
+    
+  }
+  
+}
 
 function Icon(parent) {
   if (parent) {
@@ -308,37 +334,13 @@ Icon.prototype.fa_type =
 
 function Card(parent) {
   
-  var click = function (d,i) {
-    var lower_limit = window.innerHeight  * .95,
-    transform = this.__transform__,
-    newY = transform.translate().y === 0 ? lower_limit : 0;
-
-    var d = d3.select(this).datum()
-        
-    var c = new  Card(d3.select('#canvas'))
-    // c.title(d.label)
-    // c.level( 2)
-    c.strip.update([d])  
-    
-    transform
-      .translate({
-        x: transform.translate().x,
-        y: newY
-      })
-      .animate({
-        ease: 'elastic',
-        duration:800
-      })
-    
-  }
-  
-  //arrow-circle-o-up
   
   if (parent) {
 
-    this.container = new Control(parent.insert('g', ":first-child"));
+    this.control = new Control(parent.insert('g', ":first-child"));
+    this.transform = this.control.transform;
     
-    var c=this.container.element,
+    var c=this.control.element,
         h = parent.attr('height'),
         w = parent.attr('width');
     
@@ -361,10 +363,10 @@ function Card(parent) {
         .style("font", "24px 'Helvetica'")      
       .append("div")
         
-      this.title_text.on('mousedown',click) 
+      // this.title_text.on('mousedown',click) 
 
       var title_node = this.title_text.node()
-      title_node.__transform__ = this.container.transform      
+      title_node.__transform__ = this.control.transform      
 
 
       this.strip = new Strip(this)
@@ -380,9 +382,9 @@ function Card(parent) {
         .append('g')
         .append("foreignObject")
           .attr({
-            y:window.innerHeight - 50,
-            height: 50,
-            width:  w 
+            y : window.innerHeight - 50,
+            height : 50,
+            width :  w 
           })
         .append("xhtml:body")
           .style("font", "24px 'Helvetica'")      
@@ -404,87 +406,69 @@ Card.prototype.title = function (text) {
     }
 }
 
-
-Card.prototype.level = function (level) {  
-  return level ? (this.level=level) : this.level;
-}
-
 Card.prototype.update = function(data){
-  
-  this.title_text.data(data)
-  
+    
   this.strip.update(data)
   
 }
 
 function Strip(parent) {
     
-  var tuner =  this.tuner = d3.scale.quantile()
+  var tuner = this.tuner = d3.scale.quantile()
     .domain([0])
     .range([])
   
-  this.parent = function () {
-    return parent;
-  }
+  var p = this.parent = function(){
+    return parent
+  } 
+  
+   
+  var retune = function (e,newX) {
+    
+    var d = tuner(newX)
+    
+    parent.title ((d===null) ? '' : d.label)
 
-      
+    parent.title_text.datum(d)
+    
+  }
+  
   var drag = d3.behavior.drag()
   .on('drag',function (d) {
     var transform = this.__transform__,
     newX= transform.translate().x + d3.event.dx,
-    right_limit = this.getBBox().width/2;
+    right_limit = this.getBBox().width-125;
 
-    console.log ({newX:newX,'this':this,bbox:this.getBBox().width,right_limit:right_limit})
+    // console.log ({newX:newX,'this':this,right_limit:right_limit,adjust:125-newX})
 
-    if (-right_limit <= newX && newX <= 75 ){
+    if (-right_limit <= newX && newX <= 125 ){
       transform.translate({
         y: transform.translate().y,
         x: newX
       }).render()
       
-      $(this).trigger('tune',newX)
+      $(this).trigger('tune',125-newX)
     }     
   })
   
   if (parent) {
     
-    this.strip = new Control(parent.container.element.append('g').attr('class','strip'))
+    this.control = new Control(parent.control.element.append('g').attr('class','strip'))
     
-    this.strip
-      .element
+    this.control.element
       .call(drag);
-        
-    $(this.strip.element.node()).on('tune',function (e,newX) {
-
-      var d=this.tuner(newX+(window.innerWidth/2))
-        
-      parent.title ((d===null) ? '' : d.label)
-  
-      parent.title_text.datum(d)
       
-    },this)
+    $(this.control.element.node()).on('tune',retune)    
 
-
-    this.background = this.strip.element.insert('rect')
+    this.background = this.control.element.insert('rect')
       .attr({
         height: 500,
         width: 50,
         fill: 'white'
       })
       
-   this.transform = this.strip.transform; 
+    this.transform = this.control.transform; 
   }
-  
-}
-
-
-Strip.prototype.tune =  function(e,newX){
-  
-  var d=this.tuner(newX+(window.innerWidth/2))
-        
-  parent.title ((d===null) ? '' : d.label)
-  
-  parent.title_text.datum(d)
   
 }
 
@@ -498,11 +482,11 @@ Strip.prototype.fill = function (fill) {
   this.background.attr('fill',fill)
 }
 
-Strip.prototype.update = function (d) {
+Strip.prototype.update = function (data) {
   
-  var parent =this.strip.element.node();
+  var parent =this.control.element.node();
   
-  var graphs = d3.select(parent).selectAll('g.graph').data(d);
+  var graphs = d3.select(parent).selectAll('g.graph').data(data);
   
   var tuner = this.tuner;
   
@@ -518,21 +502,24 @@ Strip.prototype.update = function (d) {
     
     tuner.range().push({})
 
-    d.forEach(function (v,i) {
-      var domain = tuner.domain(),
-      last = domain[domain.length-1]
+    var domain = tuner.domain(),
+        range  = tuner.range()
+
+
+    d.elements.forEach(function (v,i) {
+
+      var last = domain.length===0 ? 0 : domain[domain.length-1]
+
       domain.push(last+50)
-      tuner.domain(domain)
       
-      var range = tuner.range()
       range.push(v)
-      tuner.range(range)
+      
+      tuner.range(range).domain(domain)
 
     })
             
-    //uggly
-    var domain = tuner.domain(),
-    last = domain[domain.length-1]
+    //ugggleey
+    var last = domain[domain.length-1]
     domain.push(last+50)
     tuner.domain(domain)
     
@@ -541,39 +528,30 @@ Strip.prototype.update = function (d) {
       .translate({x: startX ,y:'50'})
       .render()
       
-    startX += 50 + d.length*50
+    startX += 50 + d.elements.length*50
 
-  })
+  },parent.tuner)
 
-  //count bars
-  
-  var strip_count = d.reduce(function(a, b) {
-
-
-    return a + b.length
-  }, 0)
-
-  strip_count += d.length + 1
-  
-  var strip_width = strip_count*50
     
-  this.background.attr('width',strip_width)
+  this.background.attr('width',startX)
+  
+  $(this.control.element.node()).trigger('tune',75)
 
 }
 
 function Graph(parent) {
   if (parent) {
     
-    this.graph = new Control(parent)
+    this.control = new Control(parent)
 
-    this.background = this.graph.element.append('rect')
+    this.background = this.control.element.append('rect')
       .attr({
         height: 350,
         width: 0,
         fill: 'floralwhite'
       })
 
-      this.transform = this.graph.transform
+      this.transform = this.control.transform
       
   }
 }
@@ -582,11 +560,13 @@ Graph.prototype.height = function () {
   return this.background.attr('height')
 }
 
-Graph.prototype.update = function (d) {
+Graph.prototype.update = function (data) {
   
-  var parent =this.graph.element.node(),
-      bars = d3.select(parent).selectAll('rect.bar').data(d),
-      scores = d3.scale.quantize()
+  //data must contains elements, elements must have scores
+  
+  var parent =this.control.element.node(),
+      bars = d3.select(parent).selectAll('rect.bar').data(data.elements),
+      scores = d3.scale.quantile()
         .domain([0, 1])
         .range(['red', 'yellow', 'green']),
       h=this.height()
@@ -612,7 +592,7 @@ Graph.prototype.update = function (d) {
       
     })
     
-  this.background.attr('width',d.length*50)  
+  this.background.attr('width',data.elements.length*50)  
         
 }
 
