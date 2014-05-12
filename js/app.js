@@ -1,5 +1,6 @@
 "use strict";
 
+var cross ={}
 $("#viewer").on("pagecreate", function() {
 
   var viewport = {
@@ -31,7 +32,7 @@ $("#viewer").on("pagecreate", function() {
 
   var svg = d3.select('#canvas').attr(viewport);
 
-  var cross = new Viewfinder(svg)
+   cross = new Viewfinder(svg)
 
   cross.transform.scale({
     x: 3,
@@ -55,42 +56,55 @@ $("#viewer").on("pagecreate", function() {
 
   }
 
+  Card.prototype.move = function(pos){
+
+    this.transform
+      .translate(pos)
+      .animate({
+        ease: 'cubic',
+        duration: 800
+      })
+
+  }
 
 
-  
-  
+
+
   // wait for the api to be ready (which means waiting for position)
   ham.ready.done(function() {
     ham.sample()
       .done(function(data) {
 
 
-
-        var toggle_stop = function(e) {
-
+        var c1_toggle = function(d,i){
           switch (cards.length) {
             case 0:
-              move_card(c1,stops.foot)
+              c1.move(stops.foot)
+              c2.move(stops.top)
               cards.push(c1)
               break;
             case 1:
-              if (cards[0]===c1){
-                cards.push(c2)
-                move_card(c1,stops.out)
-                move_card(c2,stops.foot)
-              } else {
-                cards.pop()
-                move_card(c2,stops.zero)
-                move_card(c1,stops.top)
-              }
+              c1.move(stops.top)
+              c2.move(stops.zero)
+              cards.pop()
+              break;
+          }
+        }
+
+        var c2_toggle = function(e) {
+          
+          switch (cards.length) {
+            case 1:
+              c1.move(stops.out)
+              c2.move(stops.foot)
+              cards.push(c2)
               break;
             case 2:
               cards.shift()
-              move_card(c2,stops.top)
-              move_card(c1,stops.foot)
+              c2.move(stops.top)
+              c1.move(stops.foot)
               break;
-          }
-        
+            }
         }
 
         console.log(data)
@@ -98,16 +112,16 @@ $("#viewer").on("pagecreate", function() {
         data.elements = data.scores;
 
         var c1 = new Card(svg)
-        c1.title(data.elements[0].label)
-        c1.footer('healtharound.me')
+        // c1.title(data.elements[0].label)
+        c1.title.text('healtharound.me')
         c1.update([data])
 
-        c1.title_text.on('mousedown', toggle_stop)
+        c1.title.element.on('mousedown', c1_toggle)
 
         var c2 = new Card(svg)
-        c2.title(data.elements[0].label)
+        c2.title.text(data.elements[0].label)
         c2.update(data.elements)
-        c2.title_text.on('mousedown', toggle_stop)
+        c2.title.element.on('mousedown', c2_toggle)
 
         var third_elements = []
 
