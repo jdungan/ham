@@ -45,27 +45,6 @@ $("#viewer").on("pagecreate", function() {
   })
 
   
-  var move_card = function(c,pos){
-
-    c.transform
-      .translate(pos)
-      .animate({
-        ease: 'cubic',
-        duration: 800
-      })
-
-  }
-
-  Card.prototype.move = function(pos){
-
-    this.transform
-      .translate(pos)
-      .animate({
-        ease: 'cubic',
-        duration: 800
-      })
-
-  }
 
 
 
@@ -117,7 +96,14 @@ $("#viewer").on("pagecreate", function() {
         c1.update([data])
 
         c1.title.element.on('mousedown', c1_toggle)
-
+        
+        
+        data.elements.forEach(function (parent) {
+          parent.elements.forEach(function (child) {
+            child.parent = parent;
+          })
+        })
+        
         var c2 = new Card(svg)
         c2.title.text(data.elements[0].label)
         c2.update(data.elements)
@@ -125,14 +111,41 @@ $("#viewer").on("pagecreate", function() {
 
         var third_elements = []
 
-        data.elements.forEach(function(v) {
-          third_elements = third_elements.concat(v.elements)
+        data.elements.forEach(function(parent) {
+          parent.elements.forEach(function (child) {
+            child.parent = parent;
+          })
+          third_elements = third_elements.concat(parent.elements)
         })
+
+
+
 
         var c3 = new Card(svg)
         c3.update(third_elements)
 
         c1.transform.translate(stops.top).animate()
+
+        $(c1.strip.element.node()).on('tune',function (e,x) {
+          
+          
+          c2.title.text(c1.strip.tuner(x).label||'')
+          
+          
+        })
+        
+        $(c2.strip.element.node()).on('tune',function (e,x) {
+          
+          c3.title.text(c2.strip.tuner(x).label||'')
+
+        })
+
+
+        $(c3.strip.element.node()).on('tune',function (e,x) {
+          
+          c3.title.text(c3.strip.tuner(x).label||'')
+          
+        })
 
 
 

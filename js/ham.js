@@ -288,11 +288,23 @@ function Transform(element) {
 
 // d3 based controls
 
-function Control(d3_select){
-  this.element = d3_select || [];    
+function Control(d3_select) {
+  this.element = d3_select || [];
   this.transform = new Transform(d3_select);
-  this.element.node().__transform__ =  this.transform;
+  this.element.node().__transform__ = this.transform;
+  this.move = function(pos) {
+
+    this.transform
+      .translate(pos)
+      .animate({
+        ease: 'cubic',
+        duration: 800
+      })
+
+  }
 }
+
+
 
 function Textbox(parent){
   if (parent){
@@ -312,14 +324,11 @@ function Textbox(parent){
 }
 
 Textbox.prototype.text = function(string) {
-   
-  if (string){
-    if (this.element.text() != string){
-     this.element.text(string)       
-  } else {
-      this.element.text()
-    }
-  }
+  
+  if (string===undefined){ return this.element.text()}
+
+  return this.element.text(string)       
+
 }
   
 
@@ -370,7 +379,6 @@ function Card(parent) {
 
       this.title = new Textbox(c)
 
-
       this.strip = new Strip(this)
       this.strip.transform.translate({x:50,y:50}).render()
 
@@ -396,10 +404,7 @@ function Strip(parent) {
     .domain([0])
     .range([])
   
-  var p = this.parent = function(){
-    return parent
-  } 
-  
+      
    
   var retune = function (e,newX) {
     
@@ -431,8 +436,6 @@ function Strip(parent) {
     Control.apply(this,[parent.element.append('g').attr('class','strip')])
     
     this.element.call(drag);
-      
-    $(this.element.node()).on('tune',retune)    
 
     this.background = this.element.insert('rect')
       .attr({
@@ -508,7 +511,7 @@ Strip.prototype.update = function (data) {
     
   this.background.attr('width',startX)
   
-  // $(this.element.node()).trigger('tune',75)
+  $(this.element.node()).trigger('tune',75)
 
 }
 
