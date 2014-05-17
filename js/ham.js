@@ -394,17 +394,18 @@ function Card(parent) {
 
 Card.prototype.update = function(data){
   
-  this.strip.parents.range(data)
+  this.strip.subjects.range(data)
   
-  var parent_domain=[],cuml=50;
+  var domain=[0],cuml=50;
   
   data.forEach(function (parent) {
-    parent_domain.push(cuml)
     cuml+= parent.elements.length*50
+    domain.push(cuml)
   })
   
-  this.strip.parents.domain(parent_domain)
+  this.strip.subjects.domain(domain)
     
+  
   this.strip.update(data)
   
   
@@ -413,25 +414,14 @@ Card.prototype.update = function(data){
 
 function Strip(parent) {
     
-  var tuner = this.tuner = d3.scale.quantile()
+  var bars = this.bars = d3.scale.quantile()
     .domain([0])
     .range([])
   
-  var parents = this.parents = d3.scale.quantile()
+  var subjects = this.subjects = d3.scale.quantile()
     .domain([0])
     .range([])
-      
-   
-  var retune = function (e,newX) {
-    
-    var d = tuner(newX)
-    
-    parent.title.text((d===null) ? '' : d.label)
-
-    parent.title.element.datum(d)
-    
-  }
-  
+        
   var drag = d3.behavior.drag()
   .on('drag',function (d) {
     var transform = this.__transform__,
@@ -480,67 +470,55 @@ Strip.prototype.update = function (data) {
   
   var graphs = d3.select(parent).selectAll('g.graph').data(data);
   
-  var tuner = this.tuner;
-  var parents = this.parents
+  var bars = this.bars;
+  var subjects = this.subjects
+  var last = 50;
   
-  
-  var startX=50;
   
   graphs.enter()
   .append('g')
   .attr('class','graph')
   .each(function (d,i) {
-    var graph = new Graph(d3.select(this));
-    
 
+    var graph = new Graph(d3.select(this));
     graph.update(d)
     
-    tuner.range().push({})
+    graph.transform
+      .translate({x: last ,y:'50'})
+      .render()
+    
+    var domain = bars.domain(),
+        range  = bars.range();
 
-    if(d.parent){
-
-      if (d.parent!=parents.range()[parents.range().length-1]){
-        parents.range().push(d.parent)
-
-      }
-    }
-
-    var domain = tuner.domain(),
-        range  = tuner.range()
-
-
+    range.push({})
+        
     d.elements.forEach(function (v,i) {
 
-      var last = domain.length===0 ? 0 : domain[domain.length-1]
-
-      domain.push(last+50)
+      domain.push(last)
       
       range.push(v)
-      
-      tuner.range(range).domain(domain)
 
-    })
-            
-    //ugggleey
-    var last = domain[domain.length-1]
-    domain.push(last+50)
-    tuner.domain(domain)
-    
-    
-    graph.transform
-      .translate({x: startX ,y:'50'})
-      .render()
+      last +=50
+
       
-    startX += 50 + d.elements.length*50
+    })
+      
+    last += 50
     
-    parents.domain([0,startX])
+    domain.push(last)
+    
+    bars.range(range).domain(domain)
+    
+    
+    // subjects.domain([0,last])
 
   },parent.tuner)
 
     
-  this.background.attr('width',startX)
+  this.background.attr('width',last)
   
   $(this.element.node()).trigger('tune',75)
+  
 
 }
 

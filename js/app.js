@@ -53,18 +53,9 @@ $("#viewer").on("pagecreate", function() {
         // patch for nesting
         data.elements = data.scores;
 
-        // //add parents to second level
-        // data.elements.forEach(function (child) {
-        //     child.parent = child;
-        // })
-        // 
-        // // flatten and add parents to third level    
-        var third_elements = []
-        
+        // // flatten third level    
+        var third_elements = []        
         data.elements.forEach(function(parent) {
-          // parent.elements.forEach(function (child) {
-          //   child.parent = parent;
-          // })
           third_elements = third_elements.concat(parent.elements)
         })
 
@@ -126,36 +117,54 @@ $("#viewer").on("pagecreate", function() {
         
         
         
-        function find_parent(card,subject) {
+        
+        function find_subject(card,range,subject) {
 
-          var pR = card.strip.parents.invertExtent(subject)
+          var pR = range.invertExtent(subject)
 
-          var graphX = pR[0]
-          
+          var graphX = pR[0]+((pR[1]-pR[0])/2)
+
           var y = card.strip.transform.translate().y
 
           card.strip.transform.translate({x: -graphX,y:y}).animate()
-
-          card.title.text(subject.label||'')
+                  
+          return subject
         
         }
 
         $(c1.strip.element.node()).on('tune',function (e,x) {
-          find_parent(c2,c1.strip.tuner(x))
+          
+          
+          var c2s = find_subject(c2,c2.strip.subjects,c1.strip.bars(x))
+          
+          c2.title.text(c2s.label)
+          
+          var c3s = find_subject(c3,c3.strip.subjects,c2s)
+          
+          c3.title.text(c3s.label)
+                    
         })
         
         $(c2.strip.element.node()).on('tune',function (e,x) {
           
-          find_parent(c3,c2.strip.tuner(x))
+          
+          find_subject(c3,c3.strip.subjects,c2.strip.bars(x))
         
+          find_subject(c1,c1.strip.bars,c2.strip.subjects(x))
+
         })
 
 
         $(c3.strip.element.node()).on('tune',function (e,x) {
           
-          c3.title.text(c3.strip.tuner(x).label||'')
+          c3.title.text(c3.strip.bars(x).label||'')
           
+
         })
+
+
+        c1.transform.animate({opacity:'.7'})
+        c2.transform.animate({opacity:'.7'})
 
 
 
