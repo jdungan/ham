@@ -45,14 +45,28 @@ $("#viewer").on("pagecreate", function() {
   })
 
   
-
-
-
-
   // wait for the api to be ready (which means waiting for position)
   ham.ready.done(function() {
     ham.sample()
       .done(function(data) {
+
+        // patch for nesting
+        data.elements = data.scores;
+
+        // //add parents to second level
+        // data.elements.forEach(function (child) {
+        //     child.parent = child;
+        // })
+        // 
+        // // flatten and add parents to third level    
+        var third_elements = []
+        
+        data.elements.forEach(function(parent) {
+          // parent.elements.forEach(function (child) {
+          //   child.parent = parent;
+          // })
+          third_elements = third_elements.concat(parent.elements)
+        })
 
 
         var c1_toggle = function(d,i){
@@ -87,57 +101,53 @@ $("#viewer").on("pagecreate", function() {
         }
 
         console.log(data)
-        // patch for nesting
-        data.elements = data.scores;
 
         var c1 = new Card(svg)
         // c1.title(data.elements[0].label)
         c1.title.text('healtharound.me')
         c1.update([data])
 
-        c1.title.element.on('mousedown', c1_toggle)
+        c1.title.element.on('click', c1_toggle)
         
         
-        data.elements.forEach(function (parent) {
-          parent.elements.forEach(function (child) {
-            child.parent = parent;
-          })
-        })
         
         var c2 = new Card(svg)
         c2.title.text(data.elements[0].label)
         c2.update(data.elements)
-        c2.title.element.on('mousedown', c2_toggle)
-
-        var third_elements = []
-
-        data.elements.forEach(function(parent) {
-          parent.elements.forEach(function (child) {
-            child.parent = parent;
-          })
-          third_elements = third_elements.concat(parent.elements)
-        })
-
-
+        c2.title.element.on('click', c2_toggle)
 
 
         var c3 = new Card(svg)
+        
         c3.update(third_elements)
 
         c1.transform.translate(stops.top).animate()
 
+        
+        
+        
+        function find_parent(card,subject) {
+
+          var pR = card.strip.parents.invertExtent(subject)
+
+          var graphX = pR[0]
+          
+          var y = card.strip.transform.translate().y
+
+          card.strip.transform.translate({x: -graphX,y:y}).animate()
+
+          card.title.text(subject.label||'')
+        
+        }
+
         $(c1.strip.element.node()).on('tune',function (e,x) {
-          
-          
-          c2.title.text(c1.strip.tuner(x).label||'')
-          
-          
+          find_parent(c2,c1.strip.tuner(x))
         })
         
         $(c2.strip.element.node()).on('tune',function (e,x) {
           
-          c3.title.text(c2.strip.tuner(x).label||'')
-
+          find_parent(c3,c2.strip.tuner(x))
+        
         })
 
 

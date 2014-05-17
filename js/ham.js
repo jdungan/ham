@@ -393,8 +393,21 @@ function Card(parent) {
 }
 
 Card.prototype.update = function(data){
+  
+  this.strip.parents.range(data)
+  
+  var parent_domain=[],cuml=50;
+  
+  data.forEach(function (parent) {
+    parent_domain.push(cuml)
+    cuml+= parent.elements.length*50
+  })
+  
+  this.strip.parents.domain(parent_domain)
     
   this.strip.update(data)
+  
+  
   
 }
 
@@ -404,6 +417,9 @@ function Strip(parent) {
     .domain([0])
     .range([])
   
+  var parents = this.parents = d3.scale.quantile()
+    .domain([0])
+    .range([])
       
    
   var retune = function (e,newX) {
@@ -465,6 +481,8 @@ Strip.prototype.update = function (data) {
   var graphs = d3.select(parent).selectAll('g.graph').data(data);
   
   var tuner = this.tuner;
+  var parents = this.parents
+  
   
   var startX=50;
   
@@ -473,10 +491,19 @@ Strip.prototype.update = function (data) {
   .attr('class','graph')
   .each(function (d,i) {
     var graph = new Graph(d3.select(this));
+    
 
     graph.update(d)
     
     tuner.range().push({})
+
+    if(d.parent){
+
+      if (d.parent!=parents.range()[parents.range().length-1]){
+        parents.range().push(d.parent)
+
+      }
+    }
 
     var domain = tuner.domain(),
         range  = tuner.range()
@@ -505,6 +532,8 @@ Strip.prototype.update = function (data) {
       .render()
       
     startX += 50 + d.elements.length*50
+    
+    parents.domain([0,startX])
 
   },parent.tuner)
 
