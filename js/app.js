@@ -73,6 +73,7 @@ $("#viewer").on("pagecreate", function() {
               cards.pop()
               break;
           }
+        
         }
 
         var c2_toggle = function(e) {
@@ -94,13 +95,10 @@ $("#viewer").on("pagecreate", function() {
         console.log(data)
 
         var c1 = new Card(svg)
-        // c1.title(data.elements[0].label)
         c1.title.text('healtharound.me')
         c1.update([data])
 
         c1.title.element.on('click', c1_toggle)
-        
-        
         
         var c2 = new Card(svg)
         c2.title.text(data.elements[0].label)
@@ -109,49 +107,48 @@ $("#viewer").on("pagecreate", function() {
 
 
         var c3 = new Card(svg)
-        
         c3.update(third_elements)
-
         c1.transform.translate(stops.top).animate()
 
         
-        
-        
-        
         function find_subject(card,range,subject) {
 
-          var pR = range.invertExtent(subject)
+          if (subject ? subject.label : undefined)  {
+          
+            var pR = range.invertExtent(subject)
 
-          var graphX = pR[0]+((pR[1]-pR[0])/2)
+            var graphX = 125-(pR[0]+((pR[1]-pR[0])/2))
 
-          var y = card.strip.transform.translate().y
+            var y = card.strip.transform.translate().y
 
-          card.strip.transform.translate({x: -graphX,y:y}).animate()
+            card.strip.transform.translate({x: graphX,y:y}).animate()
                   
-          return subject
+            return subject
+          }
         
         }
 
         $(c1.strip.element.node()).on('tune',function (e,x) {
           
+          var c2s = c1.strip.bars(x)
           
-          var c2s = find_subject(c2,c2.strip.subjects,c1.strip.bars(x))
+          find_subject(c2,c2.strip.subjects,c2s)
           
           c2.title.text(c2s.label)
           
-          var c3s = find_subject(c3,c3.strip.subjects,c2s)
+          find_subject(c3,c3.strip.subjects,c2s)
           
-          c3.title.text(c3s.label)
-                    
+          c3.title.text(c2s.elements[0].elements[0].label)
+
         })
         
         $(c2.strip.element.node()).on('tune',function (e,x) {
           
+          find_subject(c3,c3.strip.subjects,c2.strip.bars(x))     
           
-          find_subject(c3,c3.strip.subjects,c2.strip.bars(x))
-        
           find_subject(c1,c1.strip.bars,c2.strip.subjects(x))
 
+        
         })
 
 
@@ -163,10 +160,14 @@ $("#viewer").on("pagecreate", function() {
         })
 
 
-        c1.transform.animate({opacity:'.7'})
-        c2.transform.animate({opacity:'.7'})
+        // c1.transform.animate({opacity:'.1'})
+        // c2.transform.animate({opacity:'.1'})
 
+        c1.strip.fill('mediumspringgreen')
+        c2.strip.fill('powderblue')
+        c3.strip.fill('tomato')
 
+        $(c3.element.node()).trigger('tune',75)
 
       })
       .error(function(d) {

@@ -393,22 +393,32 @@ function Card(parent) {
 }
 
 Card.prototype.update = function(data){
+    
+  var range =[],domain=[0],cuml=50;
   
-  this.strip.subjects.range(data)
+  domain.push(50)
   
-  var domain=[0],cuml=50;
+  range.push({})
   
   data.forEach(function (parent) {
+    
     cuml+= parent.elements.length*50
+    
     domain.push(cuml)
+    
+    range.push(parent)
+    
+    cuml+=50
+    
+    range.push({})
+    
+    domain.push(cuml)
+    
   })
   
-  this.strip.subjects.domain(domain)
-    
+  this.strip.subjects.domain(domain).range(range)
   
   this.strip.update(data)
-  
-  
   
 }
 
@@ -500,25 +510,24 @@ Strip.prototype.update = function (data) {
 
       last +=50
 
-      
     })
       
+    domain.push(last)
+
+    range.push({})
+
     last += 50
     
     domain.push(last)
-    
+
     bars.range(range).domain(domain)
     
     
-    // subjects.domain([0,last])
-
   },parent.tuner)
 
     
   this.background.attr('width',last)
-  
-  $(this.element.node()).trigger('tune',75)
-  
+    
 
 }
 
