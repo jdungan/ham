@@ -293,18 +293,14 @@ function Control(d3_select) {
   this.transform = new Transform(d3_select);
   this.element.node().__transform__ = this.transform;
   this.move = function(pos) {
-
     this.transform
       .translate(pos)
       .animate({
         ease: 'cubic',
         duration: 800
       })
-
   }
 }
-
-
 
 function Textbox(parent){
   if (parent){
@@ -385,7 +381,7 @@ function Card(parent) {
       this.icon = new Icon(c).fa_type('chevron-down')
       this.icon.transform.translate({x:w/2,y:50}).render()
 
-      this.footer = new Textbox(c)
+      // this.footer = new Textbox(c)
   
   }
   
@@ -437,8 +433,6 @@ function Strip(parent) {
     var transform = this.__transform__,
     newX= transform.translate().x + d3.event.dx,
     right_limit = this.getBBox().width-125;
-
-    // console.log ({newX:newX,'this':this,right_limit:right_limit,adjust:125-newX})
 
     if (-right_limit <= newX && newX <= 125 ){
       transform.translate.incr({x: d3.event.dx}).animate()
@@ -494,7 +488,7 @@ Strip.prototype.update = function (data) {
     graph.update(d)
     
     graph.transform
-      .translate({x: last ,y:'50'})
+      .translate({x:last ,y:'50'})
       .render()
     
     var domain = bars.domain(),
