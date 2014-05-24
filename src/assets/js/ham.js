@@ -124,9 +124,14 @@ var ham = new(function api() {
   this.ready = dfd.promise()
 
   var api_calls = [{
-    'name': 'sample',
+    'name': 'score',
     'uri': 'api/score/'
-  }]
+  },
+  {
+    'name': 'fake',
+    'uri':'api/score-fake/'
+  }
+  ]
 
   this.options = this.options || {
     url: 'http://206.214.166.144/'
@@ -134,16 +139,17 @@ var ham = new(function api() {
 
   this.call_api = function(uri, ajax_params) {
     ajax_params = ajax_params || {};
+    ajax_params.format='jsonp'
     return $.ajax({
       type: "get",
       url: this.options.url + uri + this.loc.position,
       data: ajax_params,
-      dataType: 'jsonp',
+      dataType: 'jsonp'
     })
   };
 
   // setup simple api mappings
-  api_calls.every(function(v, i) {
+  api_calls.forEach(function(v, i) {
     api.prototype[v.name] = function(params) {
       return this.call_api(v.uri, params)
     }
@@ -242,21 +248,22 @@ function Transform(element) {
   order.forEach(function(v) {
     this[v] = function(d) {
       var isFunction = (typeof inner[v].value === "function")
-      
+
       if (d == undefined) {
         return isFunction ? inner[v].value() : inner[v].value
       };
-      
+
       var new_value = (typeof d === 'function') ? d(element) : d
-      
+
       isFunction ? inner[v].value(new_value) : inner[v].value = new_value
-      
+
       return this;
     }
 
     this[v].incr = new inner[v].increment(this)
-    
+
   }, this);
+
   
   this.render = function() {
     element.attr('transform', this.toString());
@@ -288,10 +295,53 @@ function Transform(element) {
 
 // d3 based controls
 
-function Control(d3_select){
-  this.element = d3_select || [];    
+function Control(d3_select) {
+  this.element = d3_select || [];
   this.transform = new Transform(d3_select);
-  this.element.node().__transform__ =  this.transform;
+  this.element.node().__transform__ = this.transform;
+  this.move = function(pos) {
+    this.transform
+      .translate(pos)
+      .animate({
+        ease: 'cubic',
+        duration: 800
+      })
+  }
+}
+
+
+function Grade(parent){
+  if (parent){
+    Control.call(this,parent
+      .append('g')
+    )
+    
+    this.circle =
+      this.element.append('circle')
+      .attr({
+        r:25,
+        opacity:'.8',
+        fill:'green'      
+      })
+      
+    this.letter= this.element
+      .append('text')
+      .attr({'class':'grade'})
+  }
+}
+
+Grade.prototype.grade = function(score){
+  var scale = d3.scale.quantile()
+    .domain([0,1])
+    .range(['F','F','F','F','F','F','F','D','C','B','A'])
+  
+  var color = d3.scale.quantile()
+    .domain([0,1])
+    .range(['red','yellow','green'])
+
+  this.letter.text(scale(score));
+  this.circle.attr({'fill':color(score)})
+  
 }
 
 function Textbox(parent){
@@ -312,14 +362,11 @@ function Textbox(parent){
 }
 
 Textbox.prototype.text = function(string) {
-   
-  if (string){
-    if (this.element.text() != string){
-     this.element.text(string)       
-  } else {
-      this.element.text()
-    }
-  }
+  
+  if (string===undefined){ return this.element.text()}
+
+  return this.element.text(string)       
+
 }
   
 
@@ -370,14 +417,13 @@ function Card(parent) {
 
       this.title = new Textbox(c)
 
-
       this.strip = new Strip(this)
       this.strip.transform.translate({x:50,y:50}).render()
 
       this.icon = new Icon(c).fa_type('chevron-down')
       this.icon.transform.translate({x:w/2,y:50}).render()
 
-      this.footer = new Textbox(c)
+      // this.footer = new Textbox(c)
   
   }
   
@@ -386,38 +432,49 @@ function Card(parent) {
 
 Card.prototype.update = function(data){
     
+  var range =[],domain=[0],cuml=50;
+  
+  domain.push(50)
+  
+  range.push({})
+  
+  data.forEach(function (parent) {
+    
+    cuml+= parent.elements.length*50
+    
+    domain.push(cuml)
+    
+    range.push(parent)
+    
+    cuml+=50
+    
+    range.push({})
+    
+    domain.push(cuml)
+    
+  })
+  
+  this.strip.subjects.domain(domain).range(range)
+  
   this.strip.update(data)
   
 }
 
 function Strip(parent) {
     
-  var tuner = this.tuner = d3.scale.quantile()
+  var bars = this.bars = d3.scale.quantile()
     .domain([0])
     .range([])
   
-  var p = this.parent = function(){
-    return parent
-  } 
-  
-   
-  var retune = function (e,newX) {
-    
-    var d = tuner(newX)
-    
-    parent.title.text((d===null) ? '' : d.label)
-
-    parent.title.element.datum(d)
-    
-  }
-  
+  var subjects = this.subjects = d3.scale.quantile()
+    .domain([0])
+    .range([])
+        
   var drag = d3.behavior.drag()
   .on('drag',function (d) {
     var transform = this.__transform__,
     newX= transform.translate().x + d3.event.dx,
     right_limit = this.getBBox().width-125;
-
-    // console.log ({newX:newX,'this':this,right_limit:right_limit,adjust:125-newX})
 
     if (-right_limit <= newX && newX <= 125 ){
       transform.translate.incr({x: d3.event.dx}).animate()
@@ -431,8 +488,6 @@ function Strip(parent) {
     Control.apply(this,[parent.element.append('g').attr('class','strip')])
     
     this.element.call(drag);
-      
-    $(this.element.node()).on('tune',retune)    
 
     this.background = this.element.insert('rect')
       .attr({
@@ -461,55 +516,60 @@ Strip.prototype.update = function (data) {
   
   var graphs = d3.select(parent).selectAll('g.graph').data(data);
   
-  var tuner = this.tuner;
+  var bars = this.bars;
+  var subjects = this.subjects
+  var last = 50;
   
-  var startX=50;
   
   graphs.enter()
   .append('g')
   .attr('class','graph')
   .each(function (d,i) {
-    var graph = new Graph(d3.select(this));
 
+    var graph = new Graph(d3.select(this));
     graph.update(d)
     
-    tuner.range().push({})
-
-    var domain = tuner.domain(),
-        range  = tuner.range()
-
-
-    d.elements.forEach(function (v,i) {
-
-      var last = domain.length===0 ? 0 : domain[domain.length-1]
-
-      domain.push(last+50)
-      
-      range.push(v)
-      
-      tuner.range(range).domain(domain)
-
-    })
-            
-    //ugggleey
-    var last = domain[domain.length-1]
-    domain.push(last+50)
-    tuner.domain(domain)
+    var grade = new Grade(graph.element)
     
+    grade.grade(d.score)
+
+    grade.transform.translate.incr({x:d.elements.length*25}).render()
     
     graph.transform
-      .translate({x: startX ,y:'50'})
+      .translate({x:last ,y:'50'})
       .render()
-      
-    startX += 50 + d.elements.length*50
-
-  },parent.tuner)
-
     
-  this.background.attr('width',startX)
-  
-  // $(this.element.node()).trigger('tune',75)
+    var domain = bars.domain(),
+        range  = bars.range();
 
+    range.push({})
+        
+    d.elements.forEach(function (v,i) {
+
+      domain.push(last)
+      
+      range.push(v)
+
+      last +=50
+
+    })
+      
+    domain.push(last)
+
+    range.push({})
+
+    last += 50
+    
+    domain.push(last)
+
+    bars.range(range).domain(domain)
+    
+    
+    
+  },parent.tuner)
+    
+  this.background.attr('width',last)
+  
 }
 
 function Graph(parent) {
