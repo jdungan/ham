@@ -124,9 +124,14 @@ var ham = new(function api() {
   this.ready = dfd.promise()
 
   var api_calls = [{
-    'name': 'sample',
+    'name': 'score',
     'uri': 'api/score/'
-  }]
+  },
+  {
+    'name': 'fake',
+    'uri':'api/score-fake/'
+  }
+  ]
 
   this.options = this.options || {
     url: 'http://206.214.166.144/'
@@ -134,16 +139,17 @@ var ham = new(function api() {
 
   this.call_api = function(uri, ajax_params) {
     ajax_params = ajax_params || {};
+    ajax_params.format='jsonp'
     return $.ajax({
       type: "get",
       url: this.options.url + uri + this.loc.position,
       data: ajax_params,
-      dataType: 'jsonp',
+      dataType: 'jsonp'
     })
   };
 
   // setup simple api mappings
-  api_calls.every(function(v, i) {
+  api_calls.forEach(function(v, i) {
     api.prototype[v.name] = function(params) {
       return this.call_api(v.uri, params)
     }
@@ -242,21 +248,22 @@ function Transform(element) {
   order.forEach(function(v) {
     this[v] = function(d) {
       var isFunction = (typeof inner[v].value === "function")
-      
+
       if (d == undefined) {
         return isFunction ? inner[v].value() : inner[v].value
       };
-      
+
       var new_value = (typeof d === 'function') ? d(element) : d
-      
+
       isFunction ? inner[v].value(new_value) : inner[v].value = new_value
-      
+
       return this;
     }
 
     this[v].incr = new inner[v].increment(this)
-    
+
   }, this);
+
   
   this.render = function() {
     element.attr('transform', this.toString());

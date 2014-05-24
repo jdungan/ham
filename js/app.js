@@ -59,11 +59,11 @@ $("#viewer").on("pagecreate", function() {
   
   // wait for the api to be ready (which means waiting for position)
   ham.ready.done(function() {
-    ham.sample()
+    ham.score()
       .done(function(data) {
 
         // patch for nesting
-        data.elements = data.scores;
+        // data.elements = data.scores;
 
         // // flatten third level    
         var third_elements = []        
@@ -119,9 +119,6 @@ $("#viewer").on("pagecreate", function() {
         
         c1.title.element.on('click', c1_toggle)
         c2.title.element.on('click', c2_toggle)
-        
-        
-
 
         c1.title.text('healtharound.me')
         c1.update([data])
@@ -193,7 +190,7 @@ $("#viewer").on("pagecreate", function() {
 
 
         // c1.transform.animate({opacity:'.8'})
-        // c2.transform.animate({opacity:'.8'})
+        // c2.transform.animate({opacity:'.5'})
 
         c1.strip.fill('mediumspringgreen')
         c2.strip.fill('powderblue')
