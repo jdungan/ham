@@ -186,6 +186,21 @@ var clone_node = function(node, parent) {
   return d3.select(node.parentNode.insertBefore(node.cloneNode(true),
     node.nextSibling));
 }
+
+var scale_colors = {
+    good: '#37D7B2',
+    med: '#EBC355',
+    bad: '#F86C5F'
+}
+
+var color_quantile = d3.scale.quantile()
+    .domain([0,1])
+    .range([scale_colors['bad'], scale_colors['med'], scale_colors['good']]);
+
+var grade_quantile = d3.scale.quantile()
+    .domain([0,1])
+    .range(['F','F','F','F','F','F','F','D','C','B','A']);
+
 //tranform function to be added to a d3 objects
 
 function Transform(element) {
@@ -324,24 +339,15 @@ function Grade(parent){
         fill:'green'
       })
 
-    this.letter= this.element
+    this.letter = this.element
       .append('text')
       .attr({'class':'grade'})
   }
 }
 
 Grade.prototype.grade = function(score){
-  var scale = d3.scale.quantile()
-    .domain([0,1])
-    .range(['F','F','F','F','F','F','F','D','C','B','A'])
-
-  var color = d3.scale.quantile()
-    .domain([0,1])
-    .range(['red','yellow','green'])
-
-  this.letter.text(scale(score));
-  this.circle.attr({'fill':color(score)})
-
+  this.letter.text(grade_quantile(score));
+  this.circle.attr({'fill': color_quantile(score)})
 }
 
 function Textbox(parent){
@@ -350,13 +356,13 @@ function Textbox(parent){
       .append('g')
       .append("foreignObject")
       .attr({
-        font: "24px 'Helvetica'",
-        height: 50,
-        width:  300
+        height: 40,
+        width:  320,
+        'class': 'card-header'
       })
       .append("xhtml:body")
-        .style("font", "18px 'Helvetica'")
-      .append("div")
+        // .style("font", "18px 'Helvetica'")
+      .append("h3")
     )
   }
 }
@@ -405,12 +411,12 @@ function Card(parent) {
     var c=this.element,
         h = parent.attr('height'),
         w = parent.attr('width');
+    this.element.attr('class', 'card');
 
     // c.datum({h : h, w : w});
 
     c.append('rect').attr({
-        class: 'card',
-        fill: 'silver',
+        'class': 'card-body',
         height: h,
         width: w
       })
@@ -595,12 +601,9 @@ Graph.prototype.update = function (data) {
 
   //data must contains elements, elements must have scores
 
-  var parent =this.element.node(),
+  var parent = this.element.node(),
       bars = d3.select(parent).selectAll('rect.bar').data(data.elements),
-      scores = d3.scale.quantile()
-        .domain([0, 1])
-        .range(['red', 'yellow', 'green']),
-      h=this.height()
+      h = this.height()
 
   bars.enter()
     .append('rect')
@@ -617,7 +620,7 @@ Graph.prototype.update = function (data) {
         return h-(h * d.score)
       },
       fill: function (d,i) {
-        return scores(d.score)
+        return color_quantile(d.score)
       },
       'stroke':'black'
 
