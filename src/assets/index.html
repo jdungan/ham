@@ -6,53 +6,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  
   <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.0/jquery.mobile-1.4.0.min.css" id='jQMnDColor' />
 	<!-- FontAwesome - http://fortawesome.github.io/Font-Awesome/ -->
-    <link rel="stylesheet" href="css/font-awesome.min.css" />
-
-<!-- nativeDroid core CSS -->
+  <link rel="stylesheet" href="css/font-awesome.min.css" />
+  <!-- nativeDroid core CSS -->
   <link rel="stylesheet" href="css/jquerymobile.nativedroid.css" />
-
-<!-- nativeDroid: Light/Dark -->
+  <!-- nativeDroid: Light/Dark -->
   <link rel="stylesheet" href="css/jquerymobile.nativedroid.dark.css"  id='jQMnDTheme' />
-
-<!-- nativeDroid: Color Schemes -->
+  <!-- nativeDroid: Color Schemes -->
   <link rel="stylesheet" href="css/jquerymobile.nativedroid.color.blue.css" id='jQMnDColor' />
-
   <script src= "http://code.jquery.com/jquery-1.10.2.min.js"></script>
   <script src= "http://code.jquery.com/mobile/1.4.0/jquery.mobile-1.4.0.min.js"></script>
-  
   <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.3.13/d3.min.js" charset="utf-8"></script>
-
 </head>
 <body>
-  
   <div id='viewer' data-role='page'>
-      
-      
-      <svg id='canvas' width=1000 height=1000></svg>
-      
-
+    <svg id='canvas' width=1000 height=1000></svg>
   </div>
-
   <div id='locale' data-role='page'>
     <div data-role="header" data-position="fixed"  data-theme="b" role="banner">
-      <h1 class="ui-title" >
-          <i class="icon-angle-left home_button"></i>
+      <h1 class="ui-title">
+        <i class="icon-angle-left home_button"></i>
       </h1>
     </div>
-    <div id ='category' data-role = 'content'>
-      
+    <div id ='category' data-role='content'>
     </div>
-  
-  
   </div>
-
 </body>
-
 <script src="js/ham.js"></script>
 <script src="js/app.js"></script>
-
-
 </html>
