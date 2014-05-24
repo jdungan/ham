@@ -350,12 +350,10 @@ function Textbox(parent){
       .append('g')
       .append("foreignObject")
       .attr({
-        font: "24px 'Helvetica'",
         height: 50,
         width:  300
       })
       .append("xhtml:body")
-        .style("font", "18px 'Helvetica'")
       .append("div")
     )
   }

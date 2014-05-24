@@ -19,7 +19,7 @@ $("#viewer").on("pagecreate", function() {
         .padding(2)
         .size([diameter - margin, diameter - margin])
         .value(function(d) {
-          return d.score;
+          return 1/d.score;
         })
         .children(
           function children(d) {
