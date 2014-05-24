@@ -2,32 +2,40 @@
 
 main_border = rgba(0, 0, 0, 0.5)
 body
-    background: #25382F
     color: rgba(white, 0.7)
-    font-family:   "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif
+    font-family:  "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif
     font-weight: 300
-    padding: 10px 0
 
 card_padding = 25px
-.card
-    margin: 0 10px 10px
-    // border: 1px solid main_border
-    box-sizing: border-box
-    background: #4F5E6A
+
+// g.card
+//     filter: drop-shadow( -5px -5px 5px #000 )
+rect.card-body
+    stroke: main_border
+    stroke-width: 1px
+    stroke-opacity: 1
+    fill: #4F5E6A
+    filter: drop-shadow( -5px -5px 5px #000 )
     // background: linear-gradient(top right, #746E70, #53616D)
-    overflow: hidden
-    .card-header
-        border-bottom: 1px solid main_border
+
+// html elem
+header_height = 40px
+.card-header
+    border-bottom: 1px solid main_border
+    height: header_height
+    body
+        padding: 0
+    h3
+        line-height: header_height
         padding: 0 card_padding
-        overflow: hidden
-        h3
-            font-weight: 100
-            letter-spacing: 1px
-    .card-body
-        display: table
-        width: 100%
-        min-height: 250px
-        text-align: center
+        font-weight: 100
+        letter-spacing: 1px
+        margin: 0
+    // .card-body
+    //     display: table
+    //     width: 100%
+    //     min-height: 250px
+    //     text-align: center
     .sentiment-bars
         display: table-row
         min-height: 250px
