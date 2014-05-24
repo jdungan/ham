@@ -73,6 +73,7 @@ gulp.task 'assets', ->
   gulp
     .src paths.assets.source
     .pipe gulp.dest paths.assets.destination
+    .pipe livereload reloadServer
 
 gulp.task 'server', ->
   require('http')
