@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  
+  <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.0/jquery.mobile-1.4.0.min.css" id='jQMnDColor' />
+	<!-- FontAwesome - http://fortawesome.github.io/Font-Awesome/ -->
+    <link rel="stylesheet" href="css/font-awesome.min.css" />
+
+<!-- nativeDroid core CSS -->
+  <link rel="stylesheet" href="css/jquerymobile.nativedroid.css" />
+
+<!-- nativeDroid: Light/Dark -->
+  <link rel="stylesheet" href="css/jquerymobile.nativedroid.dark.css"  id='jQMnDTheme' />
+
+<!-- nativeDroid: Color Schemes -->
+  <link rel="stylesheet" href="css/jquerymobile.nativedroid.color.blue.css" id='jQMnDColor' />
+
+  <script src= "http://code.jquery.com/jquery-1.10.2.min.js"></script>
+  <script src= "http://code.jquery.com/mobile/1.4.0/jquery.mobile-1.4.0.min.js"></script>
+  
+  <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.3.13/d3.min.js" charset="utf-8"></script>
+
+<style>
+/* style for packing circles*/
+.node {
+  cursor: pointer;
+}
+
+.node:hover {
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+
+.node--leaf {
+  fill: white;
+}
+
+.label {
+  font: 11px "Helvetica Neue", Helvetica, Arial, sans-serif;
+  text-anchor: middle;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff, 0 -1px 0 #fff;
+}
+
+.label,
+.node--root,
+.node--leaf {
+  pointer-events: none;
+}
+
+
+
+</style>
+</head>
+<body>
+  
+  <div id='viewer' data-role='page'>
+      
+      
+      <svg id='canvas' width=1000 height=1000></svg>
+      
+
+  </div>
+
+  <div id='locale' data-role='page'>
+    <div data-role="header" data-position="fixed"  data-theme="b" role="banner">
+      <h1 class="ui-title" >
+          <i class="icon-angle-left home_button"></i>
+      </h1>
+    </div>
+    <div id ='category' data-role = 'content'>
+      
+    </div>
+  
+  
+  </div>
+
+</body>
+
+<script src="js/ham.js"></script>
+<script>
+var layout = "packed"
+</script>
+<script src="js/layouts.js"></script>
+
+
+</html>

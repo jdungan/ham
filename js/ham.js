@@ -309,6 +309,41 @@ function Control(d3_select) {
   }
 }
 
+
+function Grade(parent){
+  if (parent){
+    Control.call(this,parent
+      .append('g')
+    )
+    
+    this.circle =
+      this.element.append('circle')
+      .attr({
+        r:25,
+        opacity:'.8',
+        fill:'green'      
+      })
+      
+    this.letter= this.element
+      .append('text')
+      .attr({'class':'grade'})
+  }
+}
+
+Grade.prototype.grade = function(score){
+  var scale = d3.scale.quantile()
+    .domain([0,1])
+    .range(['F','F','F','F','F','F','F','D','C','B','A'])
+  
+  var color = d3.scale.quantile()
+    .domain([0,1])
+    .range(['red','yellow','green'])
+
+  this.letter.text(scale(score));
+  this.circle.attr({'fill':color(score)})
+  
+}
+
 function Textbox(parent){
   if (parent){
     Control.call(this,parent
@@ -494,6 +529,12 @@ Strip.prototype.update = function (data) {
     var graph = new Graph(d3.select(this));
     graph.update(d)
     
+    var grade = new Grade(graph.element)
+    
+    grade.grade(d.score)
+
+    grade.transform.translate.incr({x:d.elements.length*25}).render()
+    
     graph.transform
       .translate({x:last ,y:'50'})
       .render()
@@ -524,12 +565,11 @@ Strip.prototype.update = function (data) {
     bars.range(range).domain(domain)
     
     
+    
   },parent.tuner)
-
     
   this.background.attr('width',last)
-    
-
+  
 }
 
 function Graph(parent) {
