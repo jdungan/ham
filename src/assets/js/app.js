@@ -54,9 +54,9 @@ $("#viewer").on("pagecreate", function() {
     var x = 125-card.strip.transform.translate().x
     return card.strip.subjects(x).label
   }
-  
-  
-  
+
+
+
   // wait for the api to be ready (which means waiting for position)
   ham.ready.done(function() {
     ham.score()
@@ -65,8 +65,8 @@ $("#viewer").on("pagecreate", function() {
         // patch for nesting
         // data.elements = data.scores;
 
-        // // flatten third level    
-        var third_elements = []        
+        // // flatten third level
+        var third_elements = []
         data.elements.forEach(function(parent) {
           third_elements = third_elements.concat(parent.elements)
         })
@@ -77,7 +77,7 @@ $("#viewer").on("pagecreate", function() {
             case 0:
               c3.title.text(bar_title(c2))
               c1.move(stops.foot)
-              c2.move(stops.top)              
+              c2.move(stops.top)
               cards.push(c1)
               break;
             case 1:
@@ -86,11 +86,11 @@ $("#viewer").on("pagecreate", function() {
               cards.pop()
               break;
           }
-        
+
         }
 
         var c2_toggle = function(e) {
-          
+
           switch (cards.length) {
             case 1:
               c1.move(stops.out)
@@ -105,36 +105,36 @@ $("#viewer").on("pagecreate", function() {
               c1.move(stops.foot)
               c3.title.text(bar_title(c2))
               c2.title.text(subject_title(c2))
-              
+
               break;
             }
         }
 
         console.log(data)
-        
+
 
         var c1 = new Card(svg)
         var c2 = new Card(svg)
         var c3 = new Card(svg)
-        
+
         c1.title.element.on('click', c1_toggle)
         c2.title.element.on('click', c2_toggle)
 
         c1.title.text('healtharound.me')
         c1.update([data])
         c1.move(stops.top)
-        
+
         c2.title.text(data.elements[0].label)
         c2.update(data.elements)
 
         c3.update(third_elements)
         c3.title.text(data.elements[0].label)
 
-        
+
         function find_subject(card,range,subject) {
 
           if (subject ? subject.label : undefined)  {
-          
+
             var pR = range.invertExtent(subject)
 
             var graphX = 125-(pR[0]+((pR[1]-pR[0])/2))
@@ -142,50 +142,50 @@ $("#viewer").on("pagecreate", function() {
             var y = card.strip.transform.translate().y
 
             card.strip.transform.translate({x: graphX,y:y}).animate()
-                  
+
             return subject
           }
-        
+
         }
 
         $(c1.strip.element.node()).on('tune',function (e,x) {
-          
+
           var c2s = c1.strip.bars(x)
-          
+
           find_subject(c2,c2.strip.subjects,c2s)
-          
+
           c2.title.text(c2s.label)
-          
+
           find_subject(c3,c3.strip.subjects,c2s.elements[0])
-          
+
           // c3.title.text(c2s.elements[0].elements[0].label)
 
         })
-        
+
         $(c2.strip.element.node()).on('tune',function (e,x) {
-          
+
           var c3s = c2.strip.bars(x)
-          
+
           find_subject(c3,c3.strip.subjects,c3s)
- 
+
           c3.title.text(c3s.label)
 
           var c2s = c2.strip.subjects(x)
 
           c2.title.text(c2s.label)
-        
+
         })
 
 
         $(c3.strip.element.node()).on('tune',function (e,x) {
-                    
+
           c3.title.text(bar_title(c3))
-          
+
           var c3s = c3.strip.subjects(x)
-          
+
           c2.title.text(c3s.label)
-          
-          
+
+
         })
 
 

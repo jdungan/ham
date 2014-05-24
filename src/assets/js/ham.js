@@ -233,10 +233,10 @@ function Transform(element) {
 
     return rotation.value
   }
-  
+
   function xyIncrement(transform){
     var this_transform = transform;
-    
+
     return function(obj){
       if (obj.x||obj.x) { this().x += obj.x }
       if (obj.y||obj.y) { this().y += obj.y }
@@ -264,7 +264,7 @@ function Transform(element) {
 
   }, this);
 
-  
+
   this.render = function() {
     element.attr('transform', this.toString());
   }
@@ -289,7 +289,7 @@ function Transform(element) {
       },
       this).join(' ');
   }
-    
+
 }
 
 
@@ -315,15 +315,15 @@ function Grade(parent){
     Control.call(this,parent
       .append('g')
     )
-    
+
     this.circle =
       this.element.append('circle')
       .attr({
         r:25,
         opacity:'.8',
-        fill:'green'      
+        fill:'green'
       })
-      
+
     this.letter= this.element
       .append('text')
       .attr({'class':'grade'})
@@ -334,14 +334,14 @@ Grade.prototype.grade = function(score){
   var scale = d3.scale.quantile()
     .domain([0,1])
     .range(['F','F','F','F','F','F','F','D','C','B','A'])
-  
+
   var color = d3.scale.quantile()
     .domain([0,1])
     .range(['red','yellow','green'])
 
   this.letter.text(scale(score));
   this.circle.attr({'fill':color(score)})
-  
+
 }
 
 function Textbox(parent){
@@ -355,24 +355,24 @@ function Textbox(parent){
         width:  300
       })
       .append("xhtml:body")
-        .style("font", "18px 'Helvetica'")   
+        .style("font", "18px 'Helvetica'")
       .append("div")
     )
   }
 }
 
 Textbox.prototype.text = function(string) {
-  
+
   if (string===undefined){ return this.element.text()}
 
-  return this.element.text(string)       
+  return this.element.text(string)
 
 }
-  
+
 
 function Icon(parent) {
   if (parent) {
-    
+
     Control.apply(this,[parent.append('text')])
 
     this.element
@@ -386,7 +386,7 @@ function Icon(parent) {
       })
   }
 }
-  
+
 Icon.prototype.fa_type =
   function(name) {
     this.element.text(
@@ -397,16 +397,16 @@ Icon.prototype.fa_type =
 
 
 function Card(parent) {
-  
+
   if (parent) {
 
     Control.apply(this,[parent.insert('g', ":first-child")]);
-    
+
     var c=this.element,
         h = parent.attr('height'),
         w = parent.attr('width');
-    
-    // c.datum({h : h, w : w});   
+
+    // c.datum({h : h, w : w});
 
     c.append('rect').attr({
         class: 'card',
@@ -424,52 +424,52 @@ function Card(parent) {
       this.icon.transform.translate({x:w/2,y:50}).render()
 
       // this.footer = new Textbox(c)
-  
+
   }
-  
+
 
 }
 
 Card.prototype.update = function(data){
-    
+
   var range =[],domain=[0],cuml=50;
-  
+
   domain.push(50)
-  
+
   range.push({})
-  
+
   data.forEach(function (parent) {
-    
+
     cuml+= parent.elements.length*50
-    
+
     domain.push(cuml)
-    
+
     range.push(parent)
-    
+
     cuml+=50
-    
+
     range.push({})
-    
+
     domain.push(cuml)
-    
+
   })
-  
+
   this.strip.subjects.domain(domain).range(range)
-  
+
   this.strip.update(data)
-  
+
 }
 
 function Strip(parent) {
-    
+
   var bars = this.bars = d3.scale.quantile()
     .domain([0])
     .range([])
-  
+
   var subjects = this.subjects = d3.scale.quantile()
     .domain([0])
     .range([])
-        
+
   var drag = d3.behavior.drag()
   .on('drag',function (d) {
     var transform = this.__transform__,
@@ -478,15 +478,15 @@ function Strip(parent) {
 
     if (-right_limit <= newX && newX <= 125 ){
       transform.translate.incr({x: d3.event.dx}).animate()
-      
+
       $(this).trigger('tune',125-newX)
-    }     
+    }
   })
-  
+
   if (parent) {
-    
+
     Control.apply(this,[parent.element.append('g').attr('class','strip')])
-    
+
     this.element.call(drag);
 
     this.background = this.element.insert('rect')
@@ -495,9 +495,9 @@ function Strip(parent) {
         width: 50,
         fill: 'white'
       })
-      
+
   }
-  
+
 }
 
 
@@ -511,16 +511,16 @@ Strip.prototype.fill = function (fill) {
 }
 
 Strip.prototype.update = function (data) {
-  
+
   var parent =this.element.node();
-  
+
   var graphs = d3.select(parent).selectAll('g.graph').data(data);
-  
+
   var bars = this.bars;
   var subjects = this.subjects
   var last = 50;
-  
-  
+
+
   graphs.enter()
   .append('g')
   .attr('class','graph')
@@ -528,53 +528,53 @@ Strip.prototype.update = function (data) {
 
     var graph = new Graph(d3.select(this));
     graph.update(d)
-    
+
     var grade = new Grade(graph.element)
-    
+
     grade.grade(d.score)
 
     grade.transform.translate.incr({x:d.elements.length*25}).render()
-    
+
     graph.transform
       .translate({x:last ,y:'50'})
       .render()
-    
+
     var domain = bars.domain(),
         range  = bars.range();
 
     range.push({})
-        
+
     d.elements.forEach(function (v,i) {
 
       domain.push(last)
-      
+
       range.push(v)
 
       last +=50
 
     })
-      
+
     domain.push(last)
 
     range.push({})
 
     last += 50
-    
+
     domain.push(last)
 
     bars.range(range).domain(domain)
-    
-    
-    
+
+
+
   },parent.tuner)
-    
+
   this.background.attr('width',last)
-  
+
 }
 
 function Graph(parent) {
   if (parent) {
-    
+
     Control.call(this,parent)
 
     this.background = this.element.append('rect')
@@ -592,16 +592,16 @@ Graph.prototype.height = function () {
 }
 
 Graph.prototype.update = function (data) {
-  
+
   //data must contains elements, elements must have scores
-  
+
   var parent =this.element.node(),
       bars = d3.select(parent).selectAll('rect.bar').data(data.elements),
       scores = d3.scale.quantile()
         .domain([0, 1])
         .range(['red', 'yellow', 'green']),
       h=this.height()
-  
+
   bars.enter()
     .append('rect')
     .attr({
@@ -620,11 +620,11 @@ Graph.prototype.update = function (data) {
         return scores(d.score)
       },
       'stroke':'black'
-      
+
     })
-    
-  this.background.attr('width',data.elements.length*50)  
-        
+
+  this.background.attr('width',data.elements.length*50)
+
 }
 
 function Viewfinder(parent) {
