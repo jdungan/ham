@@ -597,6 +597,28 @@ Graph.prototype.update = function (data) {
       'stroke':'black'
 
     })
+    .each(function (d,i) {
+      var bar =  d3.select(this).append('div')
+      
+      bar.append('span')
+      bar.append('i').attr('class','icon')
+      bar.append('div').attr('class','score-bar')
+      .append('div').attr(
+        { 'class':'bar',
+          'style':function (d,i) {
+        return "height:"+d.score*100+"%"
+      }
+      
+      })
+    })  
+
+    // <div class="score-container fair">
+    //     <span class="score">C</span>
+    //     <i class="icon"></i>
+    //     <div class="score-bar">
+    //         <div class="bar" style="height: 67%"></div>
+    //     </div>
+    // </div>
 
   // this.background.attr('width',data.elements.length*50)
 

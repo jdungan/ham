@@ -1,48 +1,46 @@
 "use strict";
 
-
-
-var cross ={}
+// var cross ={}
 $("#viewer").on("pagecreate", function() {
-
-  var viewport = {
-    width: window.innerWidth,
-    height: window.innerHeight
-  },
-    stops = {
-      zero :{
-        x:0,
-        y:0
-      },
-      top: {
-        x: 0,
-        y: viewport.height * .05
-      },
-      foot: {
-        x: 0,
-        y: viewport.height * .95
-      },
-      out: {
-        x: 0,
-        y: viewport.height * 1.05
-      }
-    },
-    cards=[];
-
-
-  var svg = d3.select('#canvas').attr(viewport);
-
-  cross = new Viewfinder(svg)
-
-  cross.transform.scale({
-    x: 3,
-    y: 3
-  })
-  .translate({
-    x: 125,
-    y: viewport.height / 2
-  })
-  .animate()
+// 
+//   var viewport = {
+//     width: window.innerWidth,
+//     height: window.innerHeight
+//   },
+//     stops = {
+//       zero :{
+//         x:0,
+//         y:0
+//       },
+//       top: {
+//         x: 0,
+//         y: viewport.height * .05
+//       },
+//       foot: {
+//         x: 0,
+//         y: viewport.height * .95
+//       },
+//       out: {
+//         x: 0,
+//         y: viewport.height * 1.05
+//       }
+//     },
+//     cards=[];
+// 
+// 
+//   var svg = d3.select('#canvas').attr(viewport);
+// 
+//   cross = new Viewfinder(svg)
+// 
+//   cross.transform.scale({
+//     x: 3,
+//     y: 3
+//   })
+//   .translate({
+//     x: 125,
+//     y: viewport.height / 2
+//   })
+//   .animate()
 
   function bar_title(card){
     var x = 125-card.strip.transform.translate().x
