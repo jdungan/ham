@@ -30,8 +30,6 @@ $("#viewer").on("pagecreate", function() {
     cards=[];
 
 
-
-
   var svg = d3.select('#canvas').attr(viewport);
 
   cross = new Viewfinder(svg)
@@ -55,8 +53,6 @@ $("#viewer").on("pagecreate", function() {
     return card.strip.subjects(x).label
   }
 
-
-
   // wait for the api to be ready (which means waiting for position)
   ham.ready.done(function() {
     ham.score()
@@ -67,7 +63,6 @@ $("#viewer").on("pagecreate", function() {
         data.elements.forEach(function(parent) {
           third_elements = third_elements.concat(parent.elements)
         })
-  
   
         var c1_toggle = function(d,i){
           switch (cards.length) {
@@ -114,7 +109,7 @@ $("#viewer").on("pagecreate", function() {
         var c2 = new Card(svg)
         var c3 = new Card(svg)
   
-        c1.title.element.on('click', c1_toggle)
+        $(c1.title.element).on('swipedown', c1_toggle)
         c2.title.element.on('click', c2_toggle)
   
         c1.title.text('healtharound.me')

@@ -125,8 +125,6 @@ $("#viewer").on("pagecreate", function() {
 
     function treed(data) {
 
-
-
       var diameter = 960;
 
       var tree = d3.layout.tree()

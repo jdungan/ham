@@ -328,7 +328,7 @@ function Control(d3_select) {
 function Grade(parent){
   if (parent){
     Control.call(this,parent
-      .append('g')
+      .append('div')
     )
 
     this.circle =
@@ -352,26 +352,22 @@ Grade.prototype.grade = function(score){
 
 function Textbox(parent){
   if (parent){
-    Control.call(this,parent
-      .append('g'))
-      
-    this.text_element = this.element
-      .append("foreignObject")
+    parent
+      .append('div')  
       .attr({
         height: 40,
         width:  320,
         'class': 'card-header'
       })
-      .append("xhtml:body")
       .append("h3")
   }
 }
 
 Textbox.prototype.text = function(string) {
 
-  if (string===undefined){ return this.text_element.text()}
+  if (string===undefined){ return this.element.text()}
 
-  return this.text_element.text(string)
+  return this.element.text(string)
 
 }
 
@@ -379,7 +375,7 @@ Textbox.prototype.text = function(string) {
 function Icon(parent) {
   if (parent) {
 
-    Control.apply(this,[parent.append('text')])
+    Control.apply(this,[parent.append('div')])
 
     this.element
       .attr({
@@ -406,28 +402,14 @@ function Card(parent) {
 
   if (parent) {
 
-    Control.apply(this,[parent.insert('g', ":first-child")]);
+    var c = parent.append('div').attr('class', 'card');
 
-    var c=this.element,
-        h = parent.attr('height'),
-        w = parent.attr('width');
-        
-    this.element.attr('class', 'card');
-
-    c.append('rect').attr({
-        'class': 'card-body',
-        height: h,
-        width: w
-      })
 
       this.title = new Textbox(c)
-      this.title.transform.translate.incr({y:h-50}).render()
 
-      this.strip = new Strip(this)
-      this.strip.transform.translate({x:50,y:50}).render()
+      this.strip = new Strip(c)
 
-      this.icon = new Icon(c).fa_type('chevron-down')
-      this.icon.transform.translate({x:w/2,y:50}).render()
+      // this.icon = new Icon(c).fa_type('chevron-down')
 
 
   }
@@ -475,51 +457,51 @@ function Strip(parent) {
     .domain([0])
     .range([])
 
-  var drag = d3.behavior.drag()
-  .on('drag',function (d) {
-    var transform = this.__transform__,
-    newX= transform.translate().x + d3.event.dx,
-    right_limit = this.getBBox().width-125;
-
-    if (-right_limit <= newX && newX <= 125 ){
-      transform.translate.incr({x: d3.event.dx}).animate()
-
-      $(this).trigger('tune',125-newX)
-    }
-  })
+  // var drag = d3.behavior.drag()
+  // .on('drag',function (d) {
+  //   var transform = this.__transform__,
+  //   newX= transform.translate().x + d3.event.dx,
+  //   right_limit = this.getBBox().width-125;
+  // 
+  //   if (-right_limit <= newX && newX <= 125 ){
+  //     transform.translate.incr({x: d3.event.dx}).animate()
+  // 
+  //     $(this).trigger('tune',125-newX)
+  //   }
+  // })
 
   if (parent) {
 
-    Control.apply(this,[parent.element.append('g').attr('class','strip')])
+    this.element = parent.append('div').attr('class','strip')
 
-    this.element.call(drag);
+    // this.element.call(drag);
 
-    this.background = this.element.insert('rect')
-      .attr({
-        height: 450,
-        width: 50,
-        fill: 'white'
-      })
+    // this.background = this.element.insert('rect')
+    //   .attr({
+    //     height: 450,
+    //     width: 50,
+    //     fill: 'white'
+    //   })
 
   }
 
 }
 
 
-Strip.prototype.width = function () {
-  return this.background.attr('width')
-}
-
-
-Strip.prototype.fill = function (fill) {
-  this.background.attr('fill',fill)
-}
+// Strip.prototype.width = function () {
+//   return this.background.attr('width')
+// }
+// 
+// 
+// Strip.prototype.fill = function (fill) {
+//   this.background.attr('fill',fill)
+// }
 
 Strip.prototype.update = function (data) {
 
-  var parent =this.element.node();
+  var parent =this.element;
 
-  var graphs = d3.select(parent).selectAll('g.graph').data(data);
+  var graphs = parent.selectAll('div.graph').data(data);
 
   var bars = this.bars;
   var subjects = this.subjects
@@ -527,22 +509,22 @@ Strip.prototype.update = function (data) {
 
 
   graphs.enter()
-  .append('g')
+  .append('div')
   .attr('class','graph')
   .each(function (d,i) {
 
     var graph = new Graph(d3.select(this));
     graph.update(d)
 
-    var grade = new Grade(graph.element)
+    // var grade = new Grade(graph.element)
+    // 
+    // grade.grade(d.score)
+    // 
+    // grade.transform.translate.incr({x:d.elements.length*25}).render()
 
-    grade.grade(d.score)
-
-    grade.transform.translate.incr({x:d.elements.length*25}).render()
-
-    graph.transform
-      .translate({x:last ,y:'50'})
-      .render()
+    // graph.transform
+    //   .translate({x:last ,y:'50'})
+    //   .render()
 
     var domain = bars.domain(),
         range  = bars.range();
@@ -573,51 +555,42 @@ Strip.prototype.update = function (data) {
 
   },parent.tuner)
 
-  this.background.attr('width',last)
+  // this.background.attr('width',last)
 
 }
 
 function Graph(parent) {
   if (parent) {
 
-    Control.call(this,parent)
-
-    this.background = this.element.append('rect')
-      .attr({
-        height: 350,
-        width: 0,
-        fill: 'floralwhite'
-      })
+    this.graph = parent.append('ul')
+    //   .attr({
+    //     height: 350,
+    //     width: 0,
+    //     fill: 'floralwhite'
+    //   })
 
   }
 }
 
-Graph.prototype.height = function () {
-  return this.background.attr('height')
-}
+// Graph.prototype.height = function () {
+//   return this.background.attr('height')
+// }
 
 Graph.prototype.update = function (data) {
 
   //data must contains elements, elements must have scores
 
-  var parent = this.element.node(),
-      bars = d3.select(parent).selectAll('rect.bar').data(data.elements),
-      h = this.height()
-
+  var parent = this.graph,
+      bars = parent.selectAll('li.bar').data(data.elements)
+      
   bars.enter()
-    .append('rect')
+    .append('li')
     .attr({
       'class':'bar',
       'height': function (d,i) {
-        return d.score * h
+        return d.score *100
       },
       width:50,
-      x: function (d,i) {
-        return i*50
-      },
-      y: function (d,i) {
-        return h-(h * d.score)
-      },
       fill: function (d,i) {
         return color_quantile(d.score)
       },
@@ -625,7 +598,7 @@ Graph.prototype.update = function (data) {
 
     })
 
-  this.background.attr('width',data.elements.length*50)
+  // this.background.attr('width',data.elements.length*50)
 
 }
 
