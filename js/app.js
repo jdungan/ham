@@ -63,7 +63,7 @@ $("#viewer").on("pagecreate", function() {
       .done(function(data) {
 
         // patch for nesting
-        data.elements = data.scores;
+        // data.elements = data.scores;
 
         // // flatten third level    
         var third_elements = []        

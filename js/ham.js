@@ -129,11 +129,12 @@ var ham = new(function api() {
   }]
 
   this.options = this.options || {
-    url: 'http://206.214.166.144/'
+    url: 'http://api.healtharound.me/'
   };
 
   this.call_api = function(uri, ajax_params) {
     ajax_params = ajax_params || {};
+    ajax_params.format='jsonp'
     return $.ajax({
       type: "get",
       url: this.options.url + uri + this.loc.position,
